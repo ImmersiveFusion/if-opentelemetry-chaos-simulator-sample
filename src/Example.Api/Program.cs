@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using OpenTelemetry;
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -13,6 +12,8 @@ builder.Configuration.AddEnvironmentVariables();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<SandboxMiddleware>();
 
 void ConfigureOtlpExporter(OtlpExporterOptions otlpOptions)
 {
@@ -77,24 +78,13 @@ var summaries = new[]
 };
 
 
-app.Use((context, next) =>
-{
-    var sandboxId = context.Request.Query["sandbox"].FirstOrDefault();
-    if (!string.IsNullOrWhiteSpace(sandboxId))
-    {
-        Baggage.SetBaggage("sandbox", sandboxId);
-    }
-
-    return next(context);
-});
+app.UseMiddleware<SandboxMiddleware>();
 
 app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
     {
-        using var activity = Activity.Current?.Source.CreateActivity("InnerActivity", ActivityKind.Server);
+        using var activity = Activity.Current?.Source.StartActivity("BL/Weather+Log", ActivityKind.Server);
 
-        var sandboxId = Baggage.Current.GetBaggage("sandbox");
-
-        activity.SetTag("sandbox", sandboxId);
+        activity.AddSandboxTag();
 
         logger.LogInformation("Got the weather");
 
@@ -112,8 +102,3 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger) =>
 .WithOpenApi();
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
