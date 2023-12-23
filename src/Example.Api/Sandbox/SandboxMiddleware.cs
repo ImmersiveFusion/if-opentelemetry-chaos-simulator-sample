@@ -1,11 +1,13 @@
 using System.Diagnostics;
 using OpenTelemetry;
 
+namespace Example.Api.Sandbox;
+
 public class SandboxMiddleware : IMiddleware
 {
     public Task InvokeAsync(HttpContext context, RequestDelegate next)
     {
-        var sandboxId = context.Request.Query[SandboxConstants.QueryParamName].FirstOrDefault();
+        var sandboxId = context.Request.GetSandboxId();
         if (string.IsNullOrWhiteSpace(sandboxId))
         {
             return next(context);
@@ -14,7 +16,7 @@ public class SandboxMiddleware : IMiddleware
         Baggage.SetBaggage(SandboxConstants.TagKey, sandboxId);
         Activity.Current?.SetTag(SandboxConstants.TagKey, sandboxId);
 
-        return next(context);
 
+        return next(context);
     }
 }

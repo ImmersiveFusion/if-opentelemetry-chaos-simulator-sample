@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using OpenTelemetry;
 
+namespace Example.Api.Sandbox;
+
 public static class ActivityExtensions
 {
     public static Activity? AddSandboxTag(this Activity? activity)
