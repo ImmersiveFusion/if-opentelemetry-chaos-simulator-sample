@@ -17,8 +17,7 @@ export class AppComponent {
   circuit: { [key: string] : string; }  = {};
   status: { [key: string]: string } = {};
 
-  const decode = (str: string):string => Buffer.from(str, 'base64').toString('binary');
-  const encode = (str: string):string => Buffer.from(str, 'binary').toString('base64');
+ 
 
 
   constructor(
@@ -69,7 +68,5 @@ export class AppComponent {
      {
       
      } 
-
-
 
 }
