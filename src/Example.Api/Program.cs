@@ -79,7 +79,7 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger, CancellationToken cance
 
 
 app.MapGet("/sandbox", (ILogger<Program> logger, CancellationToken cancellationToken) => Guid.NewGuid().ToString("N"))
-    .WithName("GetWeatherForecast")
+    .WithName("GetSandbox")
     .WithOpenApi();
 
 app.MapPost("/circuit/{resource}/open", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
