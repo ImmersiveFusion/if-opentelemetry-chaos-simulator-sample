@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class SandboxService {
-  constructor() { }
+  constructor(private httpClient: HttpClient) { }
 
   close(resource: string) {
    
