@@ -7,6 +7,8 @@ using static System.Net.Mime.MediaTypeNames;
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
 
+builder.Services.AddCors();
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -31,6 +33,16 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseCors(options =>
+    {
+        options.AllowAnyOrigin();
+
+    });
+}
+else
+{
+    app.UseStaticFiles();
 }
 
 app.UseHttpsRedirection();
@@ -78,27 +90,27 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger, CancellationToken cance
 .WithOpenApi();
 
 
-app.MapGet("/sandbox", (ILogger<Program> logger, CancellationToken cancellationToken) => Guid.NewGuid().ToString("N"))
+app.MapGet("/sandbox", (ILogger<Program> logger, CancellationToken cancellationToken) => new JsonResult(Guid.NewGuid().ToString("N")))
     .WithName("GetSandbox")
     .WithOpenApi();
 
-app.MapPost("/circuit/{resource}/open", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
+app.MapPost("/failure/{resource}/inject", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, CancellationToken cancellationToken) =>
     {
         await cb.OpenAsync(resource);
         return new JsonResult(true);
     })
-    .WithName("OpenCircuit")
+    .WithName("InjectFailure")
     .WithOpenApi();
 
-app.MapPost("/circuit/{resource}/close", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
+app.MapPost("/failure/{resource}/eject", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, CancellationToken cancellationToken) =>
     {
         await cb.CloseAsync(resource);
         return new JsonResult(true);
     })
-    .WithName("CloseCircuit")
+    .WithName("EjectFailure")
     .WithOpenApi();
 
-app.MapGet("/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, SqlConnection connection, CancellationToken cancellationToken) =>
+app.MapGet("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, SqlConnection connection, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsSqlOpenAsync(cancellationToken);
@@ -129,7 +141,7 @@ app.MapGet("/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreake
     .WithOpenApi();
 
 
-app.MapGet("/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
+app.MapGet("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsRedisOpenAsync(cancellationToken);
