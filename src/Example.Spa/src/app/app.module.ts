@@ -8,7 +8,7 @@ import {
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
-import { SandboxComponent } from './sandbox/sandbox.component';
+import { SandboxComponent } from './components/sandbox/sandbox.component';
 
 import { SandboxService } from './services/sandbox.service';
 import { FlowService } from './services/flow.service';

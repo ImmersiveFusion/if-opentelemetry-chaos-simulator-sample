@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { SandboxService } from '../services/sandbox.service';
-import { FlowService } from '../services/flow.service';
-import { catchError, first, of } from 'rxjs';
-import { FailureService } from '../services/failure.service';
+import { Component, EventEmitter, OnInit } from '@angular/core';
+import { SandboxService } from '../../services/sandbox.service';
+import { FlowService } from '../../services/flow.service';
+import { catchError, first, merge, of, switchMap } from 'rxjs';
+import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
@@ -13,6 +13,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class SandboxComponent implements OnInit {
   showMoreHelp = false;
   sandboxId = 123;
+
+  generateSandboxEvent = new EventEmitter<boolean>;
+  output: string[] = [];
 
   resources = ['sql', 'redis'];
   circuit: { [key: string] : string; }  = {};
@@ -30,6 +33,7 @@ export class SandboxComponent implements OnInit {
     
     )
      {
+      
       this.resources.forEach(r =>{
         this.circuit[r] = 'operational';
         this.status[r] = '200 OK';
@@ -38,47 +42,48 @@ export class SandboxComponent implements OnInit {
      }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-
-      //HACK: There should be a better way to solve Behva
-      // if (!(this.route.queryParams as any).closeD)
-      // {
-      //   return 
-      // }
-
-      // this.sandboxId = params['sandboxId'];
-      // if (!this.sandboxId){
-      //   this.sandboxService.get()
-      //     .pipe(
-      //       first(), 
-      //       catchError((e) =>
-      //       {
-      //        console.log(e)
-      //        return of({});
-      //       })
-      //     )
-      //     .subscribe((response: any) => {
+      this.sandboxId = (this.route.snapshot.params as any).sandboxId;
+      
+      merge(this.generateSandboxEvent)
+      .pipe(
+        switchMap(() => this.sandboxService.get())        ,
+            catchError((e) =>
+            {
+             console.log(e)
+             return of({});
+            }
+          ))
+          .subscribe((response: any) => {
           
-      //       console.log(response.value);
+            const sandboxId = response.value;
 
-      //       const sandboxId = response.value;
+            if (sandboxId)
+            {
+              window.location.href = `/sandbox/${sandboxId}`;
+            }            
+          })
 
-      //       if (sandboxId)
-      //       {
-      //         window.location.href = `/?sandboxId=${sandboxId}`;
-      //       }
 
-            
-      //     })
-      //   }
-      //   else
-      //   {
-      //     //ready to use
-      //    }
+          if (!this.sandboxId){
+          
+          this.generateSandboxEvent.next(true);
 
-         console.log(this.sandboxId)
-    });
+        }
+        else
+        {
+          //sandbox ready to use
+          this.terminalLog('Sandbox ready');
+         }
+  }
 
+  terminalLog(message: string)
+  {
+    this.output.push(`>>> ${message}`);
+  }
+
+  regenerateSandbox()
+  {
+    this.generateSandboxEvent.next(true);
   }
 
 
@@ -99,11 +104,13 @@ export class SandboxComponent implements OnInit {
         case 'operational':
           this.failureService.eject(resource);
           this.circuit[resource] ='unavailable';
+          this.terminalLog(`${resource} switched to 'unavailable'`);
           break;
         case 'unavallable':
         default:
           this.failureService.inject(resource);
           this.circuit[resource] ='operational';
+          this.terminalLog(`${resource} switched to 'operational'`);
           break;
       }
      }

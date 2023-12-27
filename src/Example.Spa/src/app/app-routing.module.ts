@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { SandboxComponent } from './sandbox/sandbox.component';
+import { SandboxComponent } from './components/sandbox/sandbox.component';
 
 const routes: Routes = [
   {
