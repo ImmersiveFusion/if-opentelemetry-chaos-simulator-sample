@@ -273,6 +273,20 @@ body {
     width: 1920px;
   }
 
+  //peusdo boostrap grid system
+  .row
+{
+display:flex;
+
+    .col-6
+    {
+width:50%;
+    }
+
+}
+
+
+
   /* Responsive Styles */
   @media screen and (max-width: 767px) {
     .card-container > *:not(.circle-link) ,
@@ -299,5 +313,19 @@ body {
     svg#rocket-smoke {
       display: none;
       visibility: hidden;
+    }
+  }
+  
+  @media (max-width: 700px) {
+
+    .row
+    {
+      display: inherit;
+   
+        .col-6
+        {
+    width:100%;
+        }
+    
     }
   }

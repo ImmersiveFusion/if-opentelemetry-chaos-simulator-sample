@@ -10,7 +10,7 @@ export class SandboxService {
   constructor(private httpClient: HttpClient) { }
 
   get() : Observable<string>{
-    return this.httpClient.get<string>(`${environment.apiUri}/sandbox`);
+    return this.httpClient.post<string>(`${environment.apiUri}/sandbox`, {});
   }
 
 }

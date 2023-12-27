@@ -37,6 +37,8 @@ if (app.Environment.IsDevelopment())
     app.UseCors(options =>
     {
         options.AllowAnyOrigin();
+        options.AllowAnyMethod();
+        options.AllowAnyHeader();
 
     });
 }
@@ -90,7 +92,7 @@ app.MapGet("/weatherforecast", (ILogger<Program> logger, CancellationToken cance
 .WithOpenApi();
 
 
-app.MapGet("/sandbox", (ILogger<Program> logger, CancellationToken cancellationToken) => new JsonResult(Guid.NewGuid().ToString("N")))
+app.MapPost("/sandbox", (ILogger<Program> logger, CancellationToken cancellationToken) => new JsonResult(Guid.NewGuid().ToString("N")))
     .WithName("GetSandbox")
     .WithOpenApi();
 
@@ -110,7 +112,7 @@ app.MapPost("/failure/{resource}/eject", async (string resource, ILogger<Program
     .WithName("EjectFailure")
     .WithOpenApi();
 
-app.MapGet("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, SqlConnection connection, CancellationToken cancellationToken) =>
+app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, SqlConnection connection, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsSqlOpenAsync(cancellationToken);
@@ -141,7 +143,7 @@ app.MapGet("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitB
     .WithOpenApi();
 
 
-app.MapGet("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
+app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsRedisOpenAsync(cancellationToken);

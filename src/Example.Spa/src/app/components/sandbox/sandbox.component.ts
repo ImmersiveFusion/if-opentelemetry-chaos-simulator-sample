@@ -18,10 +18,10 @@ export class SandboxComponent implements OnInit {
   output: string[] = [];
 
   resources = ['sql', 'redis'];
-  circuit: { [key: string] : string; }  = {};
+  circuit: { [key: string]: string; } = {};
   status: { [key: string]: string } = {};
 
- 
+
 
 
   constructor(
@@ -30,98 +30,90 @@ export class SandboxComponent implements OnInit {
     private sandboxService: SandboxService,
     private flowService: FlowService,
     private failureService: FailureService,
-    
-    )
-     {
-      
-      this.resources.forEach(r =>{
-        this.circuit[r] = 'operational';
-        this.status[r] = '200 OK';
-      })
 
-     }
+  ) {
 
-  ngOnInit(): void {
-      this.sandboxId = (this.route.snapshot.params as any).sandboxId;
-      
-      merge(this.generateSandboxEvent)
-      .pipe(
-        switchMap(() => this.sandboxService.get())        ,
-            catchError((e) =>
-            {
-             console.log(e)
-             return of({});
-            }
-          ))
-          .subscribe((response: any) => {
-          
-            const sandboxId = response.value;
+    this.resources.forEach(r => {
+      this.circuit[r] = 'operational';
+      this.status[r] = '200 OK';
+    })
 
-            if (sandboxId)
-            {
-              window.location.href = `/sandbox/${sandboxId}`;
-            }            
-          })
-
-
-          if (!this.sandboxId){
-          
-          this.generateSandboxEvent.next(true);
-
-        }
-        else
-        {
-          //sandbox ready to use
-          this.terminalLog('Sandbox ready');
-         }
   }
 
-  terminalLog(message: string)
-  {
+  ngOnInit(): void {
+    this.sandboxId = (this.route.snapshot.params as any).sandboxId;
+
+    merge(this.generateSandboxEvent)
+      .pipe(
+        switchMap(() => this.sandboxService.get()),
+        catchError((e) => {
+          console.log(e)
+          return of({});
+        }
+        ))
+      .subscribe((response: any) => {
+
+        const sandboxId = response.value;
+
+        if (sandboxId) {
+          window.location.href = `/sandbox/${sandboxId}`;
+        }
+      })
+
+
+    if (!this.sandboxId) {
+
+      this.generateSandboxEvent.next(true);
+
+    }
+    else {
+      //sandbox ready to use
+      this.terminalLog('Sandbox ready');
+    }
+  }
+
+  terminalLog(message: string) {
     this.output.push(`>>> ${message}`);
   }
 
-  regenerateSandbox()
-  {
+  regenerateSandbox() {
     this.generateSandboxEvent.next(true);
   }
 
 
-    test(resource: string)
-    {
-      this.flowService.execute(resource).pipe(
-        first(),
 
-      ).subscribe(output => {
 
-        this.status[resource] = output;
-      });
+  toggle(resource: string) {
+    switch (this.circuit[resource]) {
+      case 'operational':
+        this.failureService.eject(resource);
+        this.circuit[resource] = 'unavailable';
+        this.terminalLog(`${resource} switched to 'unavailable'`);
+        break;
+      case 'unavallable':
+      default:
+        this.failureService.inject(resource);
+        this.circuit[resource] = 'operational';
+        this.terminalLog(`${resource} switched to 'operational'`);
+        break;
     }
+  }
 
-     toggle(resource: string){
-      switch(this.circuit[resource])
-      {
-        case 'operational':
-          this.failureService.eject(resource);
-          this.circuit[resource] ='unavailable';
-          this.terminalLog(`${resource} switched to 'unavailable'`);
-          break;
-        case 'unavallable':
-        default:
-          this.failureService.inject(resource);
-          this.circuit[resource] ='operational';
-          this.terminalLog(`${resource} switched to 'operational'`);
-          break;
-      }
-     }
+  run(resource: string) {
+    this.flowService.execute(resource).pipe(
+      first(),
 
-     visualize()
-     {
-        
-     }
+    ).subscribe(output => {
 
-     clone()
-     {
-      
-     } 
+      this.status[resource] = output;
+    });
+  }
+
+  visualize() {
+
+  }
+
+  clone() {
+
+  }
 }
