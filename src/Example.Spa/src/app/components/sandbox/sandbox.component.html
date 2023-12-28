@@ -31,17 +31,11 @@
 
       <div class="card-container">
 
-        <a *ngFor="let resource of resources" class="card" [class.operational]="circuit[resource]==='operational'" [class.unavailable]="circuit[resource]==='unavailable'" rel="noopener" (click)="toggle(resource)">
-          <span *ngIf="circuit[resource]==='operational'">Break</span>
-          <span *ngIf="circuit[resource]==='unavailable'">Fix</span>
+        <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="toggle(resource)">
+          <span *ngIf="!resources[resource]">Break</span>
+          <span *ngIf="resources[resource]">Fix</span>
           {{resource | uppercase}}
         </a>
-
-        <a class="card" (click)="regenerateSandbox()">Regenerate Sandbox ID</a>
-
-
-
-
 
         <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
           <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
@@ -82,10 +76,10 @@
     <div class="card-container">
 
 
-      <a *ngFor="let resource of resources" class="card" [class.operational]="circuit[resource]==='operational'" [class.unavailable]="circuit[resource]==='unavailable'" rel="noopener" (click)="run(resource)">
+      <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="execute(resource)">
         Execute {{resource | uppercase}} flow
-        <span *ngIf="circuit[resource]==='operational'">(Likely to Succeed)</span>
-        <span *ngIf="circuit[resource]==='unavailable'">(Likely to Fail)</span>
+        <span *ngIf="!resources[resource]">(Likely to Succeed)</span>
+        <span *ngIf="resources[resource]">(Likely to Fail)</span>
       </a>
 
       <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
@@ -167,12 +161,21 @@
   </div>
   <div class="col-6">
 
+
+    <div>
+       <div class="card-container">
+
+        <a class="card card-small" (click)="regenerateSandbox()">Regenerate Sandbox ID</a>
+        <a class="card card-small" (click)="clearTerminal()">Clear Terminal</a>
+    </div>
+
     <!-- Terminal -->
     <div class="terminal">
       <pre>sandbox-id: {{sandboxId}}</pre>
 
-      <pre *ngFor="let resource of resources">{{resource | uppercase}}(circuit, result) => ({{circuit[resource]}}: {{status[resource]}})</pre>
-      <pre *ngFor="let line of output">{{line}}</pre>
+      <pre *ngFor="let resourceKey of getResourceKeys()">{{resourceKey | uppercase}}(available) => ({{resources[resourceKey]}})</pre>
+
+      <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
 
     </div>
 

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, OnInit } from '@angular/core';
 import { SandboxService } from '../../services/sandbox.service';
 import { FlowService } from '../../services/flow.service';
-import { catchError, first, merge, of, switchMap } from 'rxjs';
+import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
 import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
 
@@ -12,17 +12,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class SandboxComponent implements OnInit {
   showMoreHelp = false;
-  sandboxId = 123;
+  sandboxId?: string;
 
   generateSandboxEvent = new EventEmitter<boolean>;
   output: string[] = [];
 
-  resources = ['sql', 'redis'];
-  circuit: { [key: string]: string; } = {};
-  status: { [key: string]: string } = {};
-
-
-
+  resources:{ [id: string] : boolean } = {
+    'sql': false,
+    'redis': false
+  };
 
   constructor(
     private route: ActivatedRoute,
@@ -32,12 +30,6 @@ export class SandboxComponent implements OnInit {
     private failureService: FailureService,
 
   ) {
-
-    this.resources.forEach(r => {
-      this.circuit[r] = 'operational';
-      this.status[r] = '200 OK';
-    })
-
   }
 
   ngOnInit(): void {
@@ -47,11 +39,11 @@ export class SandboxComponent implements OnInit {
       .pipe(
         switchMap(() => this.sandboxService.get()),
         catchError((e) => {
-          console.log(e)
+          //console.log(e)
           return of({});
         }
         ))
-      .subscribe((response: any) => {
+      .subscribe((response) => {
 
         const sandboxId = response.value;
 
@@ -70,9 +62,23 @@ export class SandboxComponent implements OnInit {
       //sandbox ready to use
       this.terminalLog('Sandbox ready');
     }
+
+    const resourceKeys = this.getResourceKeys();
+    const callbacks = resourceKeys.map(r => this.failureService.status(r, this.sandboxId!));
+
+    forkJoin(callbacks).pipe(first()).subscribe(results => {
+      results.forEach((r, i) => {
+        this.resources[resourceKeys[i]] = r.value;
+      });
+    });
   }
 
-  terminalLog(message: string) {
+  getResourceKeys() : string[]
+  {
+    return Object.keys(this.resources);
+  }
+
+  private terminalLog(message: string) {
     this.output.push(`>>> ${message}`);
   }
 
@@ -80,33 +86,87 @@ export class SandboxComponent implements OnInit {
     this.generateSandboxEvent.next(true);
   }
 
-
-
-
-  toggle(resource: string) {
-    switch (this.circuit[resource]) {
-      case 'operational':
-        this.failureService.eject(resource);
-        this.circuit[resource] = 'unavailable';
-        this.terminalLog(`${resource} switched to 'unavailable'`);
-        break;
-      case 'unavallable':
-      default:
-        this.failureService.inject(resource);
-        this.circuit[resource] = 'operational';
-        this.terminalLog(`${resource} switched to 'operational'`);
-        break;
-    }
+  clearTerminal()
+  {
+    this.output = [];
   }
 
-  run(resource: string) {
-    this.flowService.execute(resource).pipe(
-      first(),
+  toggle(resource: string) {
 
-    ).subscribe(output => {
+    if (this.resources[resource]) //open?
+    {
+      this.failureService.eject(resource, this.sandboxId!)
+      .pipe(first())
+      .subscribe((response) => {
+        console.log(response);
+        
+        this.resources[resource] = false;
+        this.terminalLog(`${resource} switched to 'available' (circuit is closed)`);
 
-      this.status[resource] = output;
-    });
+      });
+    }
+    else
+    {
+      this.failureService.inject(resource, this.sandboxId!)
+      .pipe(first())
+      .subscribe((response) => {
+        console.log(response);
+
+        this.resources[resource] = true;
+        this.terminalLog(`${resource} switched to 'unavailable' (circuit is open)`);
+      });
+    }
+
+  }
+
+  execute(resource: string) {
+    
+    this.terminalLog(`Executing ${resource} request. Please wait... (if failure was injected this may take a few seconds)`)
+    
+    switch(resource)
+    {
+      case 'sql':
+        this.flowService.executeSql(this.sandboxId!)
+        .pipe(
+          tap(() => {
+            //nothing  
+          }),
+          catchError(e => {
+            this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
+            return of({failed: true});
+          }),
+          first())
+          
+        .subscribe((response: any) => {
+          if (response.failed)
+          {
+            return;
+          }
+          this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
+        });
+        break;
+      case 'redis':
+        this.flowService.executeRedis(this.sandboxId!)
+        .pipe(
+          tap(() => {
+            //nothing  
+          }),
+          catchError(e => {
+            this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
+            return of({failed: true});
+          }),
+          first())
+        .subscribe((response: any) => {
+          if (response.failed)
+          {
+            return;
+          }
+          this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
+
+        });
+        break;
+
+    }
   }
 
   visualize() {
