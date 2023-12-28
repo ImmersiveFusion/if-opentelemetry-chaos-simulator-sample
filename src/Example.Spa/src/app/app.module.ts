@@ -12,13 +12,15 @@ import { SandboxComponent } from './components/sandbox/sandbox.component';
 
 import { SandboxService } from './services/sandbox.service';
 import { FlowService } from './services/flow.service';
+import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
 
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    SandboxComponent
+    SandboxComponent,
+    ReplaceLineBreaksPipe
   ],
   imports: [
     BrowserModule,
@@ -27,7 +29,8 @@ import { FlowService } from './services/flow.service';
   ],
   providers: [
     SandboxService,
-    FlowService
+    FlowService,
+    ReplaceLineBreaksPipe,
   ],
   bootstrap: [AppComponent]
 })
