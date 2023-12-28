@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
-using Polly;
-using static System.Net.Mime.MediaTypeNames;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
@@ -96,6 +94,11 @@ app.MapPost("/sandbox", (ILogger<Program> logger, CancellationToken cancellation
     .WithName("GetSandbox")
     .WithOpenApi();
 
+
+app.MapGet("/failure/{resource}/status", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, CancellationToken cancellationToken) => new JsonResult(await cb.IsOpenAsync(resource)))
+    .WithName("FailureStatus")
+    .WithOpenApi();
+
 app.MapPost("/failure/{resource}/inject", async (string resource, ILogger<Program> logger, ISandboxCircuitBreaker cb, CancellationToken cancellationToken) =>
     {
         await cb.OpenAsync(resource);
@@ -112,14 +115,16 @@ app.MapPost("/failure/{resource}/eject", async (string resource, ILogger<Program
     .WithName("EjectFailure")
     .WithOpenApi();
 
-app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, SqlConnection connection, CancellationToken cancellationToken) =>
+app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConfiguration configuration, SqlConnection connection, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsSqlOpenAsync(cancellationToken);
 
         if (isOpen)
         {
-            connection = new SqlConnection("invalid");
+            //TODO: Not a fan of swapping out the connection. Need something better with no timeout delays
+            var connectionString = configuration.GetValue<string>("ConnectionStrings:Sql:Open");    
+            connection = new SqlConnection(connectionString);
         }
 
         var command = new SqlCommand("SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]", connection);
@@ -139,18 +144,29 @@ app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuit
         return new JsonResult(result);
 
     })
-    .WithName("TestSql")
+    .WithName("ExecuteSql")
     .WithOpenApi();
 
 
-app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
+app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConfiguration configuration, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
     {
         //circuit is open, break the functionality
         var isOpen = await cb.IsRedisOpenAsync(cancellationToken);
 
         //intentionally not disposed as to not to kill the mux
         var cache = new RedisCache(new OptionsWrapper<RedisCacheOptions>(new RedisCacheOptions()
-            { ConnectionMultiplexerFactory = () => isOpen ? new Task<IConnectionMultiplexer>(null) : Task.FromResult(mux)
+            { ConnectionMultiplexerFactory = async () =>
+                {
+                    if (isOpen)
+                    {
+                        //TODO: Not a fan of swapping out the connection. Need something better with no timeout delays
+                        var connectionString = configuration.GetValue<string>("ConnectionStrings:Redis:Open");
+
+                        return ConnectionMultiplexer.Connect(connectionString);
+                    }
+    
+                    return mux;
+                }
             }));
 
         var key = Guid.NewGuid().ToString();
@@ -159,10 +175,17 @@ app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircu
         await cache.RemoveAsync(key, cancellationToken);
 
         logger.LogInformation("Got Redis");
-        
-        return new JsonResult(true);
+
+        var result = new Dictionary<string, object>();
+
+        result.Add("Added", DateTime.UtcNow);
+        result.Add("Removed", DateTime.UtcNow);
+
+        logger.LogInformation("Got Redis");
+
+        return new JsonResult(result);
     })
-    .WithName("TestRedis")
+    .WithName("ExecuteRedis")
     .WithOpenApi();
 
 app.Run();
@@ -223,7 +246,7 @@ void RegisterResources(WebApplicationBuilder webApplicationBuilder)
 {
     webApplicationBuilder.Services.AddScoped<SqlConnection>(provider =>
     {
-        var connectionString = webApplicationBuilder.Configuration.GetValue<string>("ConnectionStrings:Sql")!;
+        var connectionString = webApplicationBuilder.Configuration.GetValue<string>("ConnectionStrings:Sql:Closed")!;
 
         return new SqlConnection(connectionString);
     });
@@ -231,7 +254,7 @@ void RegisterResources(WebApplicationBuilder webApplicationBuilder)
 
     webApplicationBuilder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     {
-        var connectionString = webApplicationBuilder.Configuration.GetValue<string>("ConnectionStrings:Redis")!;
+        var connectionString = webApplicationBuilder.Configuration.GetValue<string>("ConnectionStrings:Redis:Closed")!;
 
         return ConnectionMultiplexer.Connect(connectionString, options => { });
     });
