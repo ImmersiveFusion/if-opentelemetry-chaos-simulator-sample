@@ -20,6 +20,12 @@ Sandboxing allows users to conduct their own experiments independently without a
 
 ## Getting Started
 
+### Demo
+
+A demo of the sample is deployed to [demo.iapm.app](https://demo.iapm.app/)
+
+Telemetry can be viewed in this grid https://my.immersivefusion.com/apm/3c4b5e00-c585-4fee-970d-9426b4f6c2db/2075ff0f-2faa-4995-aa06-76648030f440/traces?lastXMinutes=45
+
 ### Dependencies
 
 * Angular 17+
