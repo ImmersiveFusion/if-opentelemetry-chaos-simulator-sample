@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Net;
 using Microsoft.AspNetCore.Diagnostics;
@@ -18,6 +19,11 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSingleton<ISandboxCircuitBreaker, SandboxCircuitBreaker>();
 
+
+builder.Services.AddSpaStaticFiles(configuration =>
+{
+    configuration.RootPath = "wwwroot";
+});
 
 RegisterResources(builder);
 
@@ -42,7 +48,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseStaticFiles();
+    app.UseSpaStaticFiles();
 }
 
 app.UseHttpsRedirection();
@@ -187,6 +193,16 @@ app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircu
     })
     .WithName("ExecuteRedis")
     .WithOpenApi();
+
+app.UseSpa(spa =>
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        // Make sure you have started the frontend with npm run dev on port 4000
+        //spa.UseProxyToSpaDevelopmentServer("http://localhost:4000");
+    }
+});
+
 
 app.Run();
 
