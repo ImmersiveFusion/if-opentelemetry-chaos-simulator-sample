@@ -2,8 +2,8 @@ namespace Example.Api.Sandbox;
 
 public static class SandboxConstants
 {
-    public const string QueryParamName = TagKey;
-    public const string TagKey = "sandboxId";
+    public const string QueryParamName = "sandboxId";
+    public const string TagKey = "sandbox.id";
 
     public static class ResourceKeys
     {
