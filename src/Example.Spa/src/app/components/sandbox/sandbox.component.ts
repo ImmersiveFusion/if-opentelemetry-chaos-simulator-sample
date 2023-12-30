@@ -4,6 +4,7 @@ import { FlowService } from '../../services/flow.service';
 import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
 import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from 'src/environments/environment.development';
 
 @Component({
   selector: 'app-sandbox',
@@ -182,9 +183,15 @@ export class SandboxComponent implements OnInit {
 
   visualize() {
 
+    if (!this.sandboxId)
+    {
+      return;
+    }
+
+    environment.visualize(this.sandboxId!);
   }
 
   clone() {
-
+    window.open(environment.gitHubUrl);
   }
 }
