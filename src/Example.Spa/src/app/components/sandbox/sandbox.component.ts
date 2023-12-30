@@ -86,6 +86,17 @@ export class SandboxComponent implements OnInit {
     this.generateSandboxEvent.next(true);
   }
 
+  copySandboxIdToClipboard()
+  {
+    if (!this.sandboxId)
+    {
+      return;
+    }
+
+    // Copy the text inside the text field
+    navigator.clipboard.writeText(this.sandboxId!);
+  }
+
   clearTerminal()
   {
     this.output = [];
