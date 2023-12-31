@@ -4,7 +4,7 @@ import { FlowService } from '../../services/flow.service';
 import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
 import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { environment } from 'src/environments/environment.development';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-sandbox',
