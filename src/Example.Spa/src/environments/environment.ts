@@ -1,5 +1,5 @@
 export const environment = {
-    apiUri: `${window.location.protocol}://${window.location.host}`,
+    apiUri: `${window.location.protocol}//${window.location.hostname}`,
     gitHubUrl: 'https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample',
     visualize: (sandboxId: string) => { 
         //alert('No visualizer configured')
