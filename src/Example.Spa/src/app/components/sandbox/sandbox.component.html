@@ -1,9 +1,6 @@
-
-<div class="row">
-  <div class="col-6">
     <!-- What is this -->
-    <h2>Welcome to the OpenTelemetry Chaos Simulator Sample</h2>
-    <p>Example Angular and .NET Core application instrumented with OpenTelemetry.</p>
+    <h2>Chaos Simulator</h2>
+    <p>Example Chaos/Failure Injection application written in Angular and .NET Core.</p>
     <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp">More</a>
     <a (click)="showMoreHelp=false" *ngIf="showMoreHelp">Less</a>
 
@@ -27,13 +24,13 @@
     <div>
       <!-- Chaos -->
       <h2>Step 1: Inject/Eject Failure</h2>
-      <p>Simulated Resource Intermitency, Failure, Chaos. Optionally causes resources to fail and affects the generated OpenTelemetry data. </p>
+      <p>Break or fix a component of the sample. </p>
 
       <div class="card-container">
 
         <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="toggle(resource)">
-          <span *ngIf="!resources[resource]">Break</span>
-          <span *ngIf="resources[resource]">Fix</span>
+          <ng-container *ngIf="!resources[resource]">Break</ng-container>
+          <ng-container *ngIf="resources[resource]">Fix</ng-container>
           {{resource | uppercase}}
         </a>
 
@@ -71,15 +68,18 @@
     </div>
 
     <h2>Step 2: Run a flow</h2>
-    <p>Execute operations against pre-defined resources:</p>
+    <p>Run operations dependent on the (broken/operational) components of the sample.</p>
 
     <div class="card-container">
 
 
       <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="execute(resource)">
-        Execute {{resource | uppercase}} flow
-        <span *ngIf="!resources[resource]">(Likely to Succeed)</span>
-        <span *ngIf="resources[resource]">(Likely to Fail)</span>
+        Run
+        
+        <ng-container *ngIf="!resources[resource]">working</ng-container >
+        <ng-container  *ngIf="resources[resource]">broken</ng-container >
+        
+          {{resource | uppercase}} flow
       </a>
 
       <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
@@ -112,73 +112,60 @@
       </a> -->
 
     </div>
-
-
     <!-- Next Steps -->
-    <h3>Next Steps</h3>
-    <p>What do you want to do next with your app?</p>
+    <h2>Step 3: Visualize</h2>
+    <p>See the results of the induced chaos / failure injection.</p>
 
-    <input type="hidden" #selection>
+    <p>&nbsp;</p>
+    
+    <h3>Basic: Terminal:</h3>
+    <p>View a very basic representation of the application state in the terminal below or DevTools (of your browser)</p>
 
-    <div class="card-container">
-      <a class="card" target="_blank" rel="noopener" (click)="visualize()">
-        Visualize the generated telemetry
-      </a>
-      <a class="card" target="_blank" rel="noopener" (click)="clone()">
-        Clone and run locally
-      </a>
-      <!-- <button class="card card-small" (click)="selection.value = 'component'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>New Component</span>
-      </button>
-
-      <button class="card card-small" (click)="selection.value = 'material'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>Angular Material</span>
-      </button>
-
-      <button class="card card-small" (click)="selection.value = 'pwa'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>Add PWA Support</span>
-      </button>
-
-      <button class="card card-small" (click)="selection.value = 'dependency'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>Add Dependency</span>
-      </button>
-
-      <button class="card card-small" (click)="selection.value = 'test'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>Run and Watch Tests</span>
-      </button>
-
-      <button class="card card-small" (click)="selection.value = 'build'" tabindex="0">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <span>Build for Production</span>
-      </button> -->
-    </div>
-
-  </div>
-  <div class="col-6">
-
-
+    
     <div>
-       <div class="card-container">
-        <a class="card card-small" (click)="copySandboxIdToClipboard()">Copy Sandbox ID</a>
-        <a class="card card-small" (click)="clearTerminal()">Clear Terminal</a>
-        <a class="card card-small" (click)="regenerateSandbox()">Regenerate Sandbox</a>
-    </div>
+      <div class="card-container">
+       <a class="card card-small" (click)="copySandboxIdToClipboard()">Copy Sandbox ID</a>
+       <a class="card card-small" (click)="clearTerminal()">Clear Terminal</a>
+       <a class="card card-small" (click)="regenerateSandbox()">Regenerate Sandbox</a>
+   </div>
+
 
     <!-- Terminal -->
     <div class="terminal">
       <pre>sandbox-id: {{sandboxId}}</pre>
 
-      <pre *ngFor="let resourceKey of getResourceKeys()">{{resourceKey | uppercase}}(available) => ({{resources[resourceKey]}})</pre>
-
+      <pre>Resource circuits:</pre>
+      <pre *ngFor="let resourceKey of getResourceKeys()"> isOpen({{resourceKey}}) => {{resources[resourceKey]}}</pre>
       <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
 
     </div>
 
+    <p>&nbsp;</p>
+
+    <h3>Detailed: Application Peformance Monitoring (and Management):</h3>
+    <p>Get a deep presentation of the application state that is significantly more detailed and actioanlable than the terminal above or DevTools (of your browser)</p>
+
+    <div class="card-container">
+      <a class="card highlight-card" target="_blank" rel="noopener" (click)="visualize()">
+        Visualize in APM
+      </a>
+      <a class="card highlight-card" target="_blank" rel="noopener" (click)="startSubscription()">
+        Get an APM Subscription
+      </a>
+    </div>
+
+    <h2>Next Steps</h2>
+
+    <p>Clone the code for this sandbox, run locally or contribute.</p>
+
+    <div class="card-container">
+    
+      <a class="card card-small" target="_blank" rel="noopener" (click)="clone()">
+        View on GitHub
+      </a>
+     
+    </div>
+
   </div>
 
-</div>
+

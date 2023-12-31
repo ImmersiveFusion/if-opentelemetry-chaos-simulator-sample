@@ -87,10 +87,6 @@ body {
     a{
       text-align: center;
       display: inline-block;
-
-      span{
-        display: block;
-      }
     }
 
   }
@@ -197,7 +193,7 @@ body {
     margin-top: 8px;
     overflow: auto;
     background-color: rgb(15, 15, 16);
-    max-width: 100%;
+    max-width: 900px;
   }
 
   .terminal pre {
