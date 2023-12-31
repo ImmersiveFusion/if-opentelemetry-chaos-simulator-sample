@@ -16,5 +16,6 @@ export const environment = {
         //const url = 'https://my.immersivefusion.com/apm/c39056c8-f40a-4cea-bf3e-e97a0f6b27f6/2075ff0f-2faa-4995-aa06-76648030f440/traces?lastXMinutes=15&queries=&facets=' + btoa(JSON.stringify(facets));
 
         window.open(url);
-    }
+    },
+    subscriptionUrl: 'https://immersivefusion.com/pricing'
 };

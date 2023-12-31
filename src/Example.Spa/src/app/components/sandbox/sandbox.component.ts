@@ -80,7 +80,7 @@ export class SandboxComponent implements OnInit {
   }
 
   private terminalLog(message: string) {
-    this.output.push(`>>> ${message}`);
+    this.output.push(`> ${message}`);
   }
 
   regenerateSandbox() {
@@ -189,6 +189,11 @@ export class SandboxComponent implements OnInit {
     }
 
     environment.visualize(this.sandboxId!);
+  }
+
+  
+  startSubscription() {
+    window.open(environment.subscriptionUrl);
   }
 
   clone() {

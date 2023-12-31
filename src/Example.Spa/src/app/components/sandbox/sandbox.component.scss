@@ -1,20 +1,14 @@
 
+
+
 .card-container
 {
     input[type=text]{ 
-        display: inline-block;
+        display: inline;
         width: 100%;
         max-width: 350px;
         border: none;
         font-size: large;
     }
 
-    input
-    {
-        &.generate-sandbox
-        {
-            height:50px;
-        }
-
-    }
 }

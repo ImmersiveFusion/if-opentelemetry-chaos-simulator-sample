@@ -18,5 +18,6 @@ export const environment = {
         
         window.open(url);
 
-    }
+    },
+    subscriptionUrl: 'https://immersivefusion.com/pricing'
 };
