@@ -18,6 +18,8 @@ export class SandboxComponent implements OnInit {
   generateSandboxEvent = new EventEmitter<boolean>;
   output: string[] = [];
 
+  isRunning = 0;
+
   resources:{ [id: string] : boolean } = {
     'sql': false,
     'redis': false
@@ -105,12 +107,14 @@ export class SandboxComponent implements OnInit {
 
   toggle(resource: string) {
 
+    this.isRunning++;
+
     if (this.resources[resource]) //open?
     {
       this.failureService.eject(resource, this.sandboxId!)
       .pipe(first())
       .subscribe((response) => {
-        console.log(response);
+        this.isRunning--;
         
         this.resources[resource] = false;
         this.terminalLog(`${resource} switched to 'available' (circuit is closed)`);
@@ -122,7 +126,7 @@ export class SandboxComponent implements OnInit {
       this.failureService.inject(resource, this.sandboxId!)
       .pipe(first())
       .subscribe((response) => {
-        console.log(response);
+        this.isRunning--;
 
         this.resources[resource] = true;
         this.terminalLog(`${resource} switched to 'unavailable' (circuit is open)`);
@@ -135,6 +139,8 @@ export class SandboxComponent implements OnInit {
     
     this.terminalLog(`Executing ${resource} request. Please wait... (if failure was injected this may take a few seconds)`)
     
+    this.isRunning++;
+
     switch(resource)
     {
       case 'sql':
@@ -150,10 +156,13 @@ export class SandboxComponent implements OnInit {
           first())
           
         .subscribe((response: any) => {
+          this.isRunning--;
+          
           if (response.failed)
           {
             return;
-          }
+          }         
+
           this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
         });
         break;
@@ -169,15 +178,19 @@ export class SandboxComponent implements OnInit {
           }),
           first())
         .subscribe((response: any) => {
+          this.isRunning--;
+          
           if (response.failed)
           {
             return;
           }
+
           this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
 
         });
         break;
-
+        default:
+          this.isRunning--;
     }
   }
 
