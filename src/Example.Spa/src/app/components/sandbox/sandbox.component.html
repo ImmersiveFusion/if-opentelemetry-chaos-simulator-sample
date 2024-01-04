@@ -28,11 +28,11 @@
 
       <div class="card-container">
 
-        <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="toggle(resource)">
+        <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="toggle(resource)">
           <ng-container *ngIf="!resources[resource]">Break</ng-container>
           <ng-container *ngIf="resources[resource]">Fix</ng-container>
           {{resource | uppercase}}
-        </a>
+        </button>
 
         <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
           <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
@@ -68,19 +68,25 @@
     </div>
 
     <h2>Step 2: Run a flow</h2>
-    <p>Run operations dependent on the (broken/operational) components of the sample.</p>
+    <p>
+      <span>
+      Run operations dependent on the (broken/operational) components of the sample.
+    </span>
+      <span *ngIf="isRunning"><strong>Running flow, please wait...</strong></span>
+    </p>
+    
 
     <div class="card-container">
 
 
-      <a *ngFor="let resource of getResourceKeys()" class="card" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="execute(resource)">
+      <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="execute(resource)">
         Run
         
         <ng-container *ngIf="!resources[resource]">working</ng-container >
         <ng-container  *ngIf="resources[resource]">broken</ng-container >
         
           {{resource | uppercase}} flow
-      </a>
+      </button>
 
       <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
         <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
