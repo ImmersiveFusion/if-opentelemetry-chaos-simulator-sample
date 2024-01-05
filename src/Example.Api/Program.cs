@@ -25,10 +25,9 @@ builder.Services.AddSpaStaticFiles(configuration =>
     configuration.RootPath = "wwwroot";
 });
 
+builder.ConfigureOpenTelemetry();
+
 RegisterResources(builder);
-
-
-ConfigureOpenTelemetry(builder);
 
 var app = builder.Build();
 
@@ -128,9 +127,8 @@ app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuit
 
         if (isOpen)
         {
-            //TODO: Not a fan of swapping out the connection. Need something better with no timeout delays
             var connectionString = configuration.GetValue<string>("ConnectionStrings:Sql:Open");    
-            connection = new SqlConnection(connectionString);
+            connection = new SqlConnection(connectionString + ";Connect Timeout=1");
         }
 
         var command = new SqlCommand("SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]", connection);
@@ -165,10 +163,10 @@ app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircu
                 {
                     if (isOpen)
                     {
-                        //TODO: Not a fan of swapping out the connection. Need something better with no timeout delays
                         var connectionString = configuration.GetValue<string>("ConnectionStrings:Redis:Open");
 
-                        return ConnectionMultiplexer.Connect(connectionString);
+                        //synctimeout=1000 is for Azure Redis
+                        return ConnectionMultiplexer.Connect(connectionString + ",connectTimeout=1000,synctimeout=1000");
                     }
     
                     return mux;
@@ -205,58 +203,6 @@ app.UseSpa(spa =>
 
 
 app.Run();
-
-void ConfigureOpenTelemetry(WebApplicationBuilder webApplicationBuilder)
-{
-    var resourceBuilder = ResourceBuilder.CreateDefault().AddService("api", typeof(Program).Namespace,
-        (typeof(Program).Assembly?.GetName().Version ?? new Version(0, 1, 0)).ToString());
-
-    void ConfigureExporter(OtlpExporterOptions otlpOptions)
-    {
-        otlpOptions.Endpoint = new Uri(webApplicationBuilder.Configuration.GetValue<string>("Otlp:Endpoint")!);
-        otlpOptions.Headers = $"Api-Key={webApplicationBuilder.Configuration.GetValue<string>("Otlp:ApiKey")}";
-    }
-
-    webApplicationBuilder.Services.AddLogging(options =>
-    {
-        options.ClearProviders();
-        options.AddConsole();
-        options.AddOpenTelemetry(loggerOptions =>
-        {
-            loggerOptions
-                .SetResourceBuilder(resourceBuilder)
-                .AddOtlpExporter(ConfigureExporter)
-                .AddConsoleExporter()
-                ;
-
-            loggerOptions.IncludeFormattedMessage = true;
-            loggerOptions.IncludeScopes = true;
-            loggerOptions.ParseStateValues = true;
-        });
-    });
-
-    webApplicationBuilder.Services.AddOpenTelemetry()
-        .WithMetrics(meterProviderBuilder => meterProviderBuilder
-            .SetResourceBuilder(resourceBuilder)
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddRuntimeInstrumentation()
-            .AddProcessInstrumentation()
-            .AddOtlpExporter(ConfigureExporter))
-        .WithTracing(tracerProviderBuilder => tracerProviderBuilder
-            .SetResourceBuilder(resourceBuilder)
-            .AddAspNetCoreInstrumentation()
-            .AddHttpClientInstrumentation()
-            .AddSqlClientInstrumentation(options =>
-            {
-                options.RecordException = true;
-                options.SetDbStatementForText = true;
-                options.SetDbStatementForStoredProcedure = true;
-            })
-            .AddRedisInstrumentation()
-            .AddOtlpExporter(ConfigureExporter)
-            .AddConsoleExporter());
-}
 
 void RegisterResources(WebApplicationBuilder webApplicationBuilder)
 {
