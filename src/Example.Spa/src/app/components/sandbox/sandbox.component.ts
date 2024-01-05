@@ -111,10 +111,21 @@ export class SandboxComponent implements OnInit {
 
     if (this.resources[resource]) //open?
     {
+      this.terminalLog(`Fixing (ejecting the error from) ${resource}. Please wait... (if this fails, there is an issue with sample application and/or its deployment)`)
+
       this.failureService.eject(resource, this.sandboxId!)
-      .pipe(first())
+      .pipe(catchError(e => {
+        this.terminalLog(`[FAILURE]: ${resource} could not break: ${JSON.stringify(e)}`)
+        return of({failed: true});
+      }),first())
       .subscribe((response) => {
         this.isRunning--;
+
+        if (response.failed)
+        {
+          return;
+        }         
+
         
         this.resources[resource] = false;
         this.terminalLog(`${resource} switched to 'available' (circuit is closed)`);
@@ -123,10 +134,21 @@ export class SandboxComponent implements OnInit {
     }
     else
     {
+      this.terminalLog(`Breaking (injecting error into) ${resource}. Please wait... (if this fails, there is an issue with sample application and/or its deployment)`)
+
       this.failureService.inject(resource, this.sandboxId!)
-      .pipe(first())
+      .pipe(catchError(e => {
+        this.terminalLog(`[FAILURE]: ${resource} could not break: ${JSON.stringify(e)}`)
+        return of({failed: true});
+      }),first())
       .subscribe((response) => {
         this.isRunning--;
+
+        if (response.failed)
+        {
+          return;
+        }         
+
 
         this.resources[resource] = true;
         this.terminalLog(`${resource} switched to 'unavailable' (circuit is open)`);
