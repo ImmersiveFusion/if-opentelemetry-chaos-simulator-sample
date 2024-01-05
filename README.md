@@ -7,16 +7,18 @@ Example Angular and .NET Core application instrumented with OpenTelemetry.
 ![](.img/screenshot.png)
 
 ## What is this?
-This is a simple Angular/ASP.NET Core application that allows you to inject/eject failures into an application and see how those failures affect the telemetry that is generated.
+This is a simple Angular/ASP.NET Core application that answers the question "What's the point?". It allows you to inject/eject failures into an application and see how those failures affect the telemetry that is generated. It is already preconfigured with an OpenTelemetry exporter so you don't need to change any code or enter any API keys.
 
-## What does it do?
-Allows the user to simulate intermittency of resources (or break) functionality.
+## What this is not
+This simple application is not meant to exhaustively show all the capabilities OpenTelemetry. If you are looking for that functionality, check out the [OpenTelemetry demo](https://github.com/open-telemetry/opentelemetry-demo).
 
-## Why is this?
-No code! This tool was created to enable a user to see OpenTelemetry without having to write any code but see how failures (even simulated ones) affect the generated telemetry.
+## Recommended Audience
+* Those interested in but not having much epxerience with OpenTelemetry.
+* Those not wanting or having the time to configure or run a full sample application locally or otherwise.
+* Those wanting to see how a happy/broken path are showing an APM tool.
 
 ## What is sandbox?
-Sandboxing allows users to conduct their own experiments independently without affecting each other.
+When this application is deployed, it has a configured OpenTelemetry exporter. Sandboxing allows users to conduct their own experiments independently without affecting each other.
 
 ## Getting Started
 
