@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Net;
+using Example.Api.Sandbox.Temporary;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -127,8 +128,7 @@ app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuit
 
         if (isOpen)
         {
-            var connectionString = configuration.GetValue<string>("ConnectionStrings:Sql:Open");    
-            connection = new SqlConnection(connectionString + ";Connect Timeout=1");
+            throw new MockSqlException("Failure injected. Sql circuit is open.");
         }
 
         var command = new SqlCommand("SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]", connection);
@@ -157,20 +157,14 @@ app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircu
         //circuit is open, break the functionality
         var isOpen = await cb.IsRedisOpenAsync(cancellationToken);
 
+        if (isOpen)
+        {
+            throw new MockRedisException("Failure injected. Redis circuit is open.");
+        }
+
         //intentionally not disposed as to not to kill the mux
         var cache = new RedisCache(new OptionsWrapper<RedisCacheOptions>(new RedisCacheOptions()
-            { ConnectionMultiplexerFactory = async () =>
-                {
-                    if (isOpen)
-                    {
-                        var connectionString = configuration.GetValue<string>("ConnectionStrings:Redis:Open");
-
-                        //synctimeout=1000 is for Azure Redis
-                        return ConnectionMultiplexer.Connect(connectionString + ",connectTimeout=1000,synctimeout=1000");
-                    }
-    
-                    return mux;
-                }
+            { ConnectionMultiplexerFactory = async () => mux
             }));
 
         var key = Guid.NewGuid().ToString();
