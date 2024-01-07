@@ -19,6 +19,7 @@ export class SandboxComponent implements OnInit {
   output: string[] = [];
 
   isRunning = 0;
+  newData = 0;
 
   resources:{ [id: string] : boolean } = {
     'sql': false,
@@ -120,11 +121,13 @@ export class SandboxComponent implements OnInit {
       }),first())
       .subscribe((response) => {
         this.isRunning--;
+        this.newData++;
 
         if (response.failed)
         {
           return;
         }         
+
 
         
         this.resources[resource] = false;
@@ -143,12 +146,12 @@ export class SandboxComponent implements OnInit {
       }),first())
       .subscribe((response) => {
         this.isRunning--;
+        this.newData++;
 
         if (response.failed)
         {
           return;
         }         
-
 
         this.resources[resource] = true;
         this.terminalLog(`${resource} switched to 'unavailable' (circuit is open)`);
@@ -179,6 +182,7 @@ export class SandboxComponent implements OnInit {
           
         .subscribe((response: any) => {
           this.isRunning--;
+          this.newData++;
           
           if (response.failed)
           {
@@ -200,7 +204,8 @@ export class SandboxComponent implements OnInit {
           }),
           first())
         .subscribe((response: any) => {
-          this.isRunning--;
+          this.isRunning--;          
+          this.newData++;
           
           if (response.failed)
           {
