@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Net;
-using Example.Api.Sandbox.Temporary;
 using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -123,29 +122,43 @@ app.MapPost("/failure/{resource}/eject", async (string resource, ILogger<Program
 
 app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConfiguration configuration, SqlConnection connection, CancellationToken cancellationToken) =>
     {
-        //circuit is open, break the functionality
-        var isOpen = await cb.IsSqlOpenAsync(cancellationToken);
-
-        if (isOpen)
+        try
         {
-            throw new MockSqlException("Failure injected. Sql circuit is open.");
+
+            //circuit is open, break the functionality
+            var isOpen = await cb.IsSqlOpenAsync(cancellationToken);
+
+            if (isOpen)
+            {
+                logger.LogWarning("Sandbox >>> SQL circuit is open. Operation will fail");
+                var connectionString = configuration.GetValue<string>("ConnectionStrings:Sql:Open");
+                connection = new SqlConnection(connectionString + ";Connect Timeout=1");
+            }
+
+            var command = new SqlCommand("SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]", connection);
+            command.Connection.Open();
+            await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+            var result = new Dictionary<string, object>();
+
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                result.Add("ID", reader.GetValue(0));
+                result.Add("DateNowUtc", reader.GetValue(1));
+            }
+
+            logger.LogInformation("Sandbox >>> SQL circuit is closed. Operation succeeded. Got Sql");
+
+            return new JsonResult(result);
+
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Sandbox >>> SQL circuit is open. Operation failed");
+            throw;
         }
 
-        var command = new SqlCommand("SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]", connection);
-        command.Connection.Open();
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
 
-        var result = new Dictionary<string, object>();
-
-        while (await reader.ReadAsync(cancellationToken))
-        {
-            result.Add("ID", reader.GetValue(0));
-            result.Add("DateNowUtc", reader.GetValue(1));
-        }
-
-        logger.LogInformation("Got Sql");
-
-        return new JsonResult(result);
 
     })
     .WithName("ExecuteSql")
@@ -154,34 +167,55 @@ app.MapPost("/flow/execute/sql", async (ILogger<Program> logger, ISandboxCircuit
 
 app.MapPost("/flow/execute/redis", async (ILogger<Program> logger, ISandboxCircuitBreaker cb, IConfiguration configuration, IConnectionMultiplexer mux, CancellationToken cancellationToken) =>
     {
-        //circuit is open, break the functionality
-        var isOpen = await cb.IsRedisOpenAsync(cancellationToken);
-
-        if (isOpen)
+        try
         {
-            throw new MockRedisException("Failure injected. Redis circuit is open.");
-        }
 
-        //intentionally not disposed as to not to kill the mux
-        var cache = new RedisCache(new OptionsWrapper<RedisCacheOptions>(new RedisCacheOptions()
-            { ConnectionMultiplexerFactory = async () => mux
+            //circuit is open, break the functionality
+            var isOpen = await cb.IsRedisOpenAsync(cancellationToken);
+
+            if (isOpen)
+            {
+                logger.LogWarning("Sandbox >>> Redis circuit is open. Operation will fail");
+            }
+
+            //intentionally not disposed as to not to kill the mux
+            var cache = new RedisCache(new OptionsWrapper<RedisCacheOptions>(new RedisCacheOptions()
+            {
+                ConnectionMultiplexerFactory = async () =>
+                {
+                    if (isOpen)
+                    {
+                        var connectionString = configuration.GetValue<string>("ConnectionStrings:Redis:Open");
+
+                        //synctimeout=1000 is for Azure Redis
+                        return ConnectionMultiplexer.Connect(connectionString + ",connectTimeout=1000,synctimeout=1000");
+                    }
+
+                    return mux;
+                }
             }));
 
-        var key = Guid.NewGuid().ToString();
-        await cache.SetAsync(key, Array.Empty<byte>(), new DistributedCacheEntryOptions(), cancellationToken);
+            var key = Guid.NewGuid().ToString();
+            await cache.SetAsync(key, Array.Empty<byte>(), new DistributedCacheEntryOptions(), cancellationToken);
 
-        await cache.RemoveAsync(key, cancellationToken);
+            await cache.RemoveAsync(key, cancellationToken);
 
-        logger.LogInformation("Got Redis");
+            logger.LogInformation("Got Redis");
 
-        var result = new Dictionary<string, object>();
+            var result = new Dictionary<string, object>();
 
-        result.Add("Added", DateTime.UtcNow);
-        result.Add("Removed", DateTime.UtcNow);
+            result.Add("Added", DateTime.UtcNow);
+            result.Add("Removed", DateTime.UtcNow);
 
-        logger.LogInformation("Got Redis");
+            logger.LogInformation("Sandbox >>> Redis circuit is closed. Operation succeeded. Got Redis");
 
-        return new JsonResult(result);
+            return new JsonResult(result);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Sandbox >>> Redis circuit is open. Operation failed");
+            throw;
+        }
     })
     .WithName("ExecuteRedis")
     .WithOpenApi();
