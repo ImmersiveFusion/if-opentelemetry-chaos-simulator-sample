@@ -145,6 +145,18 @@ body {
     position: relative;
   }
 
+  .card.circuit-closed
+  {
+    border-color: lightgreen;
+  }
+
+  
+  .card.circuit-open
+  {
+    border-color: lightcoral;
+  }
+
+
   .card.operational
   {
     background-color: lightgreen;
