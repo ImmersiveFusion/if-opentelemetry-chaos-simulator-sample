@@ -33,7 +33,7 @@
 
       <div class="card-container">
 
-        <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="toggle(resource)">
+        <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.circuit-closed]="!resources[resource]" [class.circuit-open]="resources[resource]" rel="noopener" (click)="toggle(resource)">
           <ng-container *ngIf="!resources[resource]">Break</ng-container>
           <ng-container *ngIf="resources[resource]">Fix</ng-container>
           {{resource | uppercase}}
