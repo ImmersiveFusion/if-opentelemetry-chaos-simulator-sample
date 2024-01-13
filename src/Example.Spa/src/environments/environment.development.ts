@@ -14,7 +14,7 @@ export const environment = {
         let url = '';
         switch(window.location.hostname)
         {
-            case 'localhost':
+            case 'localhost2':
                 url = 'http://localhost:4200/apm/c39056c8-f40a-4cea-bf3e-e97a0f6b27f6/2075ff0f-2faa-4995-aa06-76648030f440/traces?lastXMinutes=15&queries=&facets=' + btoa(JSON.stringify(facets));
                 break;
             case 'app01-dev12-if-east-us.azurewebsites.net':
@@ -27,5 +27,7 @@ export const environment = {
 
         window.open(url);
     },
-    subscriptionUrl: 'https://immersivefusion.com/pricing'
+    subscriptionUrl: 'https://immersivefusion.com/pricing',
+    requiresAccountToVisualize: true,
+    discordUrl: 'https://discord.gg/bjqnPu8PEX'
 };
