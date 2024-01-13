@@ -25,6 +25,9 @@ export class SandboxComponent implements OnInit {
     'sql': false,
     'redis': false
   };
+  discordUrl: string | undefined;
+  gitHubUrl: string | undefined;
+  requiresAccountToVisualize = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -38,6 +41,9 @@ export class SandboxComponent implements OnInit {
 
   ngOnInit(): void {
     this.sandboxId = (this.route.snapshot.params as any).sandboxId;
+    this.gitHubUrl = environment.gitHubUrl;
+    this.discordUrl = environment.discordUrl;
+    this.requiresAccountToVisualize = environment.requiresAccountToVisualize;
 
     merge(this.generateSandboxEvent)
       .pipe(

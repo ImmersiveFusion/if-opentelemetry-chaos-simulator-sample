@@ -79,6 +79,12 @@ body {
     color: green;
   }
 
+  .requires-account {
+    font: larger;
+    font-weight: bold;
+    color: orange;
+  }
+
 
   .card svg.material-icons path {
     fill: #888;
@@ -299,7 +305,10 @@ width:50%;
 
 }
 
-
+.p-5
+{
+  padding-right: 5px;
+}
 
   /* Responsive Styles */
   @media screen and (max-width: 767px) {

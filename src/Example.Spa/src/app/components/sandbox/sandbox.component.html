@@ -2,8 +2,19 @@
     <h2>Chaos Simulator</h2>
     <p>Example Chaos/Failure Injection application written in Angular and .NET Core. 
       <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp">More</a>
-      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp">Less</a></p>
+      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp">Less</a>
+    </p>
     
+    <p>&nbsp;</p>
+
+    <p>
+     <strong>Links and community support:</strong>
+    </p>
+
+    <p>
+      <a *ngIf="discordUrl" [href]="discordUrl" class="p-5">Discord</a>
+      <a *ngIf="gitHubUrl" [href]="gitHubUrl" class="p-5">Github</a>
+    </p>
 
     <div *ngIf="showMoreHelp">
       <h3>What is this?</h3>
@@ -158,6 +169,10 @@
 
     <div class="card-container">
       <p *ngIf="newData" class="new-data">New data should be available in the demo grid within 30 seconds! Click on Visualize in APM</p>
+    </div>
+
+    <div class="card-container">
+      <p *ngIf="requiresAccountToVisualize" class="requires-account">You will need to create an account to visualize the telemetry.</p>
     </div>
 
     <div class="card-container">
