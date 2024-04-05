@@ -26,7 +26,25 @@ When this application is deployed, it has a configured OpenTelemetry exporter. S
 
 A demo of the sample is deployed to [demo.iapm.app](https://demo.iapm.app/)
 
-Telemetry can be viewed in this grid https://my.immersivefusion.com/apm/3c4b5e00-c585-4fee-970d-9426b4f6c2db/2075ff0f-2faa-4995-aa06-76648030f440/traces?lastXMinutes=45
+**Immersive APM Web**
+
+Play with the sample. Break things! Then wait 30 seconds and login into the grid using a [Microsoft / Azure Account (NEW!)](https://azure.iapm.app/apm/3c4b5e00-c585-4fee-970d-9426b4f6c2db/2075ff0f-2faa-4995-aa06-76648030f440/traces) or [Local / Social Account](https://my.iapm.app/apm/3c4b5e00-c585-4fee-970d-9426b4f6c2db/2075ff0f-2faa-4995-aa06-76648030f440/traces)
+
+(same grid, just different authentication options)
+
+That's it! Let us know how you like the demo
+
+[Email](info@immersivefusion.com) |
+[LinkedIn](https://www.linkedin.com/company/immersivefusion) |
+[Mastodon](https://mastodon.social/@immersivefusion) | 
+[Twitter / X](https://twitter.com/immersivefusion) |
+[YouTube](https://www.youtube.com/@immersivefusion) |
+[Facebook](https://www.facebook.com/immersivefusion) |
+[Instagram](https://www.instagram.com/immersivefusion) |
+[GitHub](https://github.com/immersivefusion) |
+[Discord](https://discord.gg/zevywnQp6K)
+
+[Click here](https://immersivefusion.com/landing/default) to try Immersive APM for your own project
 
 ### Dependencies
 
