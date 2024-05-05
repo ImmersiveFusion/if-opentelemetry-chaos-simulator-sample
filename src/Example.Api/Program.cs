@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Net;
+using IF.APM.OpenTelemetry.Forwarder.Otlp;
 using Microsoft.AspNetCore.Diagnostics;
+using OpenTelemetry.Proto.Collector.Trace.V1;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddEnvironmentVariables();
@@ -76,6 +78,12 @@ var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
+
+app.MapPost("/_tf",
+        async ([FromBody] ExportTraceServiceRequest request, ILogger<Program> logger,
+            IOtlpTraceForwarder otlpTraceForwarder, CancellationToken cancellationToken) => await otlpTraceForwarder.Forward(request, cancellationToken))
+    .WithName("TraceForwarder")
+    .WithOpenApi();
 
 app.MapGet("/weatherforecast", (ILogger<Program> logger, CancellationToken cancellationToken) =>
     {
@@ -228,7 +236,6 @@ app.UseSpa(spa =>
         //spa.UseProxyToSpaDevelopmentServer("http://localhost:4000");
     }
 });
-
 
 app.Run();
 

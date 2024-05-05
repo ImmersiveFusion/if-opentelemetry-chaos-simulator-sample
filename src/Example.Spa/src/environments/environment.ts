@@ -1,4 +1,6 @@
 export const environment = {
+    production: true,
+    otlpCollectorUrl: '/_tf',
     apiUri: `${window.location.protocol}//${window.location.hostname}`,
     gitHubUrl: 'https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample',
     visualize: (sandboxId: string) => { 
