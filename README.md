@@ -68,6 +68,131 @@ ASP.NET API
 dotnet run
 ```
 
+## Additional examples
+
+### Forwarding traces from the Angular application
+
+This example uses REST post calls to avoid CORS issues sending directly to an OTLP collector on a different domain/port.
+
+You can achieve the same result by following these instructions. 
+
+Add the Immersive APM forwarder
+
+```ps
+dotnet add package IF.APM.OpenTelemetry.Forwarder
+```
+Modify `Program.cs`
+
+```csharp
+using IF.APM.OpenTelemetry.Forwarder.Otlp;
+
+void ConfigureForwarder(OtlpTracesForwarderOptions otlpOptions)
+{
+    otlpOptions.Endpoint = new Uri(builder.Configuration.GetValue<string>("Otlp:Endpoint")!);
+    otlpOptions.Headers = new Dictionary<string, string>()
+    {
+        {
+            "Api-Key",
+            builder.Configuration.GetValue<string>("Otlp:ApiKey")!
+        }
+    };
+}
+
+builder.Services.AddOtlpTracesForwarder(ConfigureForwarder);
+```
+
+Add a controller or mapping to your trace forwarder endpoint
+
+```csharp
+
+
+app.MapPost("/_tf",
+        async ([FromBody] ExportTraceServiceRequest request, ILogger<Program> logger,
+            IOtlpTraceForwarder otlpTraceForwarder, CancellationToken cancellationToken) => await otlpTraceForwarder.Forward(request, cancellationToken))
+    .WithName("TraceForwarder")
+    .WithOpenApi();
+```
+
+Add necesarry NPM packages
+
+```ps
+npm i @jufab/opentelemetry-angular-interceptor && npm i @opentelemetry/api @opentelemetry/sdk-trace-web @opentelemetry/sdk-trace-base @opentelemetry/core @opentelemetry/semantic-conventions @opentelemetry/resources @opentelemetry/exporter-trace-otlp-http @opentelemetry/exporter-zipkin @opentelemetry/propagator-b3 @opentelemetry/propagator-jaeger @opentelemetry/context-zone-peer-dep @opentelemetry/instrumentation @opentelemetry/instrumentation-document-load @opentelemetry/instrumentation-fetch @opentelemetry/instrumentation-xml-http-request @opentelemetry/propagator-aws-xray --save-dev
+```
+
+Modify `environment.ts` to add the `otlpCollectorUrl`
+
+```typescript
+export const environment = {
+    production: true,
+    otlpCollectorUrl: '/_tf',
+}
+```
+
+Modify `AppModule.ts`
+
+```typescript
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import {
+  HttpClientModule,
+  HTTP_INTERCEPTORS,
+  HttpClient,
+} from "@angular/common/http";
+
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+import { SandboxComponent } from './components/sandbox/sandbox.component';
+
+import { SandboxService } from './services/sandbox.service';
+import { FlowService } from './services/flow.service';
+import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
+import { CompositePropagatorModule, OpenTelemetryInterceptorModule, OtelColExporterModule } from '@jufab/opentelemetry-angular-interceptor';
+import { environment } from 'src/environments/environment';
+
+
+
+@NgModule({
+  declarations: [
+    AppComponent,
+    SandboxComponent,
+    ReplaceLineBreaksPipe
+  ],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule,
+
+    OpenTelemetryInterceptorModule.forRoot({
+      commonConfig: {
+        console: !environment.production,
+        production: environment.production,
+        serviceName: 'ui', // Service name send in trace
+        probabilitySampler: '1',
+      },
+      otelcolConfig: {
+      
+        url: environment.otlpCollectorUrl,
+        // headers: {
+        //   'X-Api-Version': '2.0'
+        // }
+      },
+    }),
+    //Insert OtelCol exporter module
+    OtelColExporterModule,
+    //Insert propagator module
+    CompositePropagatorModule
+  ],
+  providers: [
+    SandboxService,
+    FlowService,
+    ReplaceLineBreaksPipe,
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+```
+
 ## Contributing
 
 This sample can be used with any OpenTelemetry tool. There is not custom code or libraries that are proprietary. 

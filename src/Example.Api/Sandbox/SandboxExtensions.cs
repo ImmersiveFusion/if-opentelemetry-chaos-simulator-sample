@@ -1,3 +1,5 @@
+using IF.APM.OpenTelemetry.Forwarder.Otlp;
+
 public static class SandboxExtensions
 {
     public static void ConfigureOpenTelemetry(this WebApplicationBuilder webApplicationBuilder)
@@ -9,6 +11,20 @@ public static class SandboxExtensions
         {
             otlpOptions.Endpoint = new Uri(webApplicationBuilder.Configuration.GetValue<string>("Otlp:Endpoint")!);
             otlpOptions.Headers = $"Api-Key={webApplicationBuilder.Configuration.GetValue<string>("Otlp:ApiKey")}";
+        }
+
+
+
+        void ConfigureForwarder(OtlpTracesForwarderOptions otlpOptions)
+        {
+            otlpOptions.Endpoint = new Uri(webApplicationBuilder.Configuration.GetValue<string>("Otlp:Endpoint")!);
+            otlpOptions.Headers = new Dictionary<string, string>()
+            {
+                {
+                    "Api-Key",
+                    webApplicationBuilder.Configuration.GetValue<string>("Otlp:ApiKey")!
+                }
+            };
         }
 
         webApplicationBuilder.Services.AddLogging(options =>
@@ -51,5 +67,7 @@ public static class SandboxExtensions
                 .AddRedisInstrumentation()
                 .AddOtlpExporter(ConfigureExporter)
                 .AddConsoleExporter());
+
+        webApplicationBuilder.Services.AddOtlpTracesForwarder(ConfigureForwarder);
     }
 }

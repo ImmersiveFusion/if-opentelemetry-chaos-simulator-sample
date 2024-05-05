@@ -13,6 +13,8 @@ import { SandboxComponent } from './components/sandbox/sandbox.component';
 import { SandboxService } from './services/sandbox.service';
 import { FlowService } from './services/flow.service';
 import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
+import { CompositePropagatorModule, OpenTelemetryInterceptorModule, OtelColExporterModule } from '@jufab/opentelemetry-angular-interceptor';
+import { environment } from 'src/environments/environment';
 
 
 
@@ -25,7 +27,27 @@ import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
   imports: [
     BrowserModule,
     HttpClientModule,
-    AppRoutingModule
+    AppRoutingModule,
+
+    OpenTelemetryInterceptorModule.forRoot({
+      commonConfig: {
+        console: !environment.production,
+        production: environment.production,
+        serviceName: 'ui', // Service name send in trace
+        probabilitySampler: '1',
+      },
+      otelcolConfig: {
+      
+        url: environment.otlpCollectorUrl,
+        // headers: {
+        //   'X-Api-Version': '2.0'
+        // }
+      },
+    }),
+    //Insert OtelCol exporter module
+    OtelColExporterModule,
+    //Insert propagator module
+    CompositePropagatorModule
   ],
   providers: [
     SandboxService,
