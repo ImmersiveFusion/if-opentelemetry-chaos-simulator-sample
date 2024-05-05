@@ -24,8 +24,8 @@
     "zone.js": "~0.14.2"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^17.0.8",
-    "@angular/cli": "~17.0.8",
+    "@angular-devkit/build-angular": "^17.3.6",
+    "@angular/cli": "~17.3.6",
     "@angular/compiler-cli": "^17.0.8",
     "@opentelemetry/api": "^1.8.0",
     "@opentelemetry/context-zone-peer-dep": "^1.24.0",
