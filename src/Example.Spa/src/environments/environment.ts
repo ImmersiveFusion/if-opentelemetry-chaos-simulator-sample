@@ -27,7 +27,7 @@ export const environment = {
         window.open(url);
 
     },
-    subscriptionUrl: 'https://immersivefusion.com/landing/default',
+    subscriptionUrl: 'https://immersivefusion.com/pricing',
     requiresAccountToVisualize: true,
     discordUrl: 'https://discord.gg/bjqnPu8PEX'
 };
