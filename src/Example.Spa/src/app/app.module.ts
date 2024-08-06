@@ -1,9 +1,10 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import {
-  HttpClientModule,
-  HTTP_INTERCEPTORS,
-  HttpClient,
+import { 
+    HTTP_INTERCEPTORS, 
+    HttpClient, 
+    provideHttpClient, 
+    withInterceptorsFromDi 
 } from "@angular/common/http";
 
 import { AppRoutingModule } from './app-routing.module';
@@ -17,21 +18,21 @@ import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
 
 
 @NgModule({
-  declarations: [
-    AppComponent,
-    SandboxComponent,
-    ReplaceLineBreaksPipe
-  ],
-  imports: [
-    BrowserModule,
-    HttpClientModule,
-    AppRoutingModule
-  ],
-  providers: [
-    SandboxService,
-    FlowService,
-    ReplaceLineBreaksPipe,
-  ],
-  bootstrap: [AppComponent]
+    declarations: [
+        AppComponent,
+        SandboxComponent,
+        ReplaceLineBreaksPipe
+    ],
+    imports: [
+        BrowserModule,
+        AppRoutingModule
+    ],
+    providers: [
+        SandboxService,
+        FlowService,
+        ReplaceLineBreaksPipe,
+        provideHttpClient(withInterceptorsFromDi()),
+    ],
+    bootstrap: [AppComponent]
 })
 export class AppModule { }
