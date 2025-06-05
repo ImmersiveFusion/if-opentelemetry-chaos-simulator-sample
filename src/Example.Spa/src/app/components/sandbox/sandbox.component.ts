@@ -7,9 +7,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 
 @Component({
-  selector: 'app-sandbox',
-  templateUrl: './sandbox.component.html',
-  styleUrl: './sandbox.component.scss'
+    selector: 'app-sandbox',
+    templateUrl: './sandbox.component.html',
+    styleUrl: './sandbox.component.scss',
+    standalone: false
 })
 export class SandboxComponent implements OnInit {
   showMoreHelp = false;
