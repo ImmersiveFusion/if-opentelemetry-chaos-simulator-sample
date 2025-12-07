@@ -1,15 +1,18 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { 
-    HTTP_INTERCEPTORS, 
-    HttpClient, 
-    provideHttpClient, 
-    withInterceptorsFromDi 
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { FormsModule } from '@angular/forms';
+import {
+    HTTP_INTERCEPTORS,
+    HttpClient,
+    provideHttpClient,
+    withInterceptorsFromDi
 } from "@angular/common/http";
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { SandboxComponent } from './components/sandbox/sandbox.component';
+import { NetworkDiagramComponent } from './components/network-diagram/network-diagram.component';
 
 import { SandboxService } from './services/sandbox.service';
 import { FlowService } from './services/flow.service';
@@ -21,10 +24,13 @@ import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
     declarations: [
         AppComponent,
         SandboxComponent,
+        NetworkDiagramComponent,
         ReplaceLineBreaksPipe
     ],
     imports: [
         BrowserModule,
+        BrowserAnimationsModule,
+        FormsModule,
         AppRoutingModule
     ],
     providers: [

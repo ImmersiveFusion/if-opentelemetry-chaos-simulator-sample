@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, OnInit } from '@angular/core';
 import { SandboxService } from '../../services/sandbox.service';
 import { FlowService } from '../../services/flow.service';
 import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
@@ -36,7 +36,7 @@ export class SandboxComponent implements OnInit {
     private sandboxService: SandboxService,
     private flowService: FlowService,
     private failureService: FailureService,
-
+    private cdr: ChangeDetectorRef
   ) {
   }
 
@@ -89,8 +89,9 @@ export class SandboxComponent implements OnInit {
     return Object.keys(this.resources);
   }
 
-  private terminalLog(message: string) {
+  terminalLog(message: string) {
     this.output.push(`> ${message}`);
+    this.cdr.detectChanges();
   }
 
   regenerateSandbox() {
@@ -137,7 +138,7 @@ export class SandboxComponent implements OnInit {
 
 
         
-        this.resources[resource] = false;
+        this.resources = { ...this.resources, [resource]: false };
         this.terminalLog(`${resource} switched to 'available' (circuit is closed)`);
 
       });
@@ -160,7 +161,7 @@ export class SandboxComponent implements OnInit {
           return;
         }         
 
-        this.resources[resource] = true;
+        this.resources = { ...this.resources, [resource]: true };
         this.terminalLog(`${resource} switched to 'unavailable' (circuit is open)`);
       });
     }
