@@ -29,14 +29,14 @@
 
       <!-- Connection Lines -->
       <!-- Client to API (always healthy) -->
-      <line x1="80" y1="240" x2="400" y2="240"
+      <line x1="80" y1="250" x2="400" y2="250"
             class="connection-line line-healthy"/>
 
       <!-- API to SQL - invisible hit area + visible line -->
-      <line x1="400" y1="240" x2="720" y2="180"
+      <line x1="400" y1="250" x2="720" y2="170"
             class="connection-hit-area"
             (click)="onConnectionClick(getConnectionForResource('sql')!)"/>
-      <line x1="400" y1="240" x2="720" y2="180"
+      <line x1="400" y1="250" x2="720" y2="170"
             class="connection-line"
             [class.line-healthy]="getConnectionForResource('sql')?.status === 'healthy'"
             [class.line-broken]="getConnectionForResource('sql')?.status === 'broken'"
@@ -44,10 +44,10 @@
             (click)="onConnectionClick(getConnectionForResource('sql')!)"/>
 
       <!-- API to Redis - invisible hit area + visible line -->
-      <line x1="400" y1="240" x2="720" y2="300"
+      <line x1="400" y1="250" x2="720" y2="350"
             class="connection-hit-area"
             (click)="onConnectionClick(getConnectionForResource('redis')!)"/>
-      <line x1="400" y1="240" x2="720" y2="300"
+      <line x1="400" y1="250" x2="720" y2="350"
             class="connection-line"
             [class.line-healthy]="getConnectionForResource('redis')?.status === 'healthy'"
             [class.line-broken]="getConnectionForResource('redis')?.status === 'broken'"
@@ -55,40 +55,41 @@
             (click)="onConnectionClick(getConnectionForResource('redis')!)"/>
 
       <!-- Message Worker to Message Broker (Coming Soon) - two offset lines for bidirectional -->
-      <line *ngIf="showComingSoon" x1="400" y1="47" x2="720" y2="47"
+      <line *ngIf="showComingSoon" x1="400" y1="30" x2="720" y2="70"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="720" y1="50" x2="400" y2="50"
+      <line *ngIf="showComingSoon" x1="720" y1="73" x2="400" y2="33"
             class="connection-line line-coming-soon"/>
 
       <!-- Message Broker to API (Coming Soon) - two offset lines for bidirectional -->
-      <line *ngIf="showComingSoon" x1="715" y1="50" x2="405" y2="220"
+      <line *ngIf="showComingSoon" x1="720" y1="90" x2="400" y2="230"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="395" y1="220" x2="725" y2="50"
+      <line *ngIf="showComingSoon" x1="400" y1="230" x2="720" y2="90"
             class="connection-line line-coming-soon"/>
 
       <!-- API to OpenTelemetry -->
-      <line x1="400" y1="260" x2="400" y2="380"
+      <line x1="400" y1="270" x2="400" y2="380"
             class="connection-line line-telemetry"/>
 
       <!-- SQL to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 180 Q 620 320 400 380"
+            d="M 720 170 Q 620 320 400 400"
             class="connection-line line-telemetry-sql"/>
 
       <!-- Redis to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 300 Q 600 380 400 380"
+            d="M 720 350 Q 600 400 400 400"
             class="connection-line line-telemetry-redis"/>
 
       <!-- OpenTelemetry to Immersive APM -->
-      <line x1="400" y1="380" x2="280" y2="530"
+      <line x1="400" y1="420" x2="280" y2="530"
             class="connection-line line-telemetry"/>
 
       <!-- OpenTelemetry to Others -->
-      <line x1="400" y1="380" x2="520" y2="530"
+      <line x1="400" y1="420" x2="520" y2="530"
             class="connection-line line-others"/>
 
       <!-- Break indicators (clickable to fix) -->
+      <!-- SQL break indicator at midpoint of line from (400,250) to (720,170) = (560, 210) -->
       <g *ngIf="getConnectionForResource('sql')?.status === 'broken'"
          class="break-indicator-svg clickable"
          (click)="onConnectionClick(getConnectionForResource('sql')!)">
@@ -96,11 +97,12 @@
         <text x="560" y="215" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
       </g>
 
+      <!-- Redis break indicator at midpoint of line from (400,250) to (720,350) = (560, 300) -->
       <g *ngIf="getConnectionForResource('redis')?.status === 'broken'"
          class="break-indicator-svg clickable"
          (click)="onConnectionClick(getConnectionForResource('redis')!)">
-        <circle cx="560" cy="270" r="14" fill="#f44336" class="break-pulse"/>
-        <text x="560" y="275" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
+        <circle cx="560" cy="300" r="14" fill="#f44336" class="break-pulse"/>
+        <text x="560" y="305" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
       </g>
 
       <!-- Request dot (photon) -->
@@ -181,13 +183,14 @@
     </svg>
 
     <!-- HTML Nodes Layer (overlaid on SVG) -->
+    <!-- Node positions use percentages that map to SVG viewBox 800x600 -->
     <div class="nodes-overlay">
-      <!-- Client Node -->
+      <!-- Client Node - SVG: (80, 250) = 10% x, 42% y -->
       <div class="node node-client"
            [class.status-processing]="getNode('client')?.status === 'processing'"
            [class.status-success]="getNode('client')?.status === 'success'"
            [class.status-error]="getNode('client')?.status === 'error'"
-           style="left: 10%; top: 28%;">
+           style="left: 20%; top: 34%;">
         <span class="node-icon"><i class="fas fa-user"></i></span>
         <span class="node-label">Client</span>
         <div class="node-actions">
@@ -196,45 +199,45 @@
         </div>
       </div>
 
-      <!-- API Node -->
+      <!-- API Node - SVG: (400, 250) = 50% x, 42% y -->
       <div class="node node-api"
            [class.status-processing]="getNode('api')?.status === 'processing'"
            [class.status-success]="getNode('api')?.status === 'success'"
            [class.status-error]="getNode('api')?.status === 'error'"
-           style="left: 50%; top: 31%;">
+           style="left: 50%; top: 32%;">
         <span class="node-icon"><i class="fas fa-server"></i></span>
         <span class="node-label">API</span>
       </div>
 
-      <!-- SQL Node -->
+      <!-- SQL Node - SVG: (720, 170) = 90% x, 28% y -->
       <div class="node node-database"
            [class.status-processing]="getNode('sql')?.status === 'processing'"
            [class.status-success]="getNode('sql')?.status === 'success'"
            [class.status-error]="getNode('sql')?.status === 'error'"
-           style="left: 90%; top: 22%;">
+           style="left: 80%; top: 24%;">
         <span class="node-icon"><i class="fas fa-database"></i></span>
         <span class="node-label">SQL Database</span>
       </div>
 
-      <!-- Redis Node -->
+      <!-- Redis Node - SVG: (720, 350) = 90% x, 58% y -->
       <div class="node node-cache"
            [class.status-processing]="getNode('redis')?.status === 'processing'"
            [class.status-success]="getNode('redis')?.status === 'success'"
            [class.status-error]="getNode('redis')?.status === 'error'"
-           style="left: 90%; top: 42%;">
+           style="left: 80%; top: 52%;">
         <span class="node-icon"><i class="fas fa-bolt"></i></span>
         <span class="node-label">Redis Cache</span>
       </div>
 
-      <!-- Message Broker Node (Coming Soon) -->
+      <!-- Message Broker Node (Coming Soon) - SVG: (720, 70) = 90% x, 12% y -->
       <div *ngIf="showComingSoon" class="node node-message-broker coming-soon"
-           style="left: 90%; top: -1%;">
+           style="left: 80%; top: 6%;">
         <span class="coming-soon-badge">Coming Soon</span>
         <span class="node-icon"><i class="fas fa-exchange-alt"></i></span>
         <span class="node-label">Message Broker</span>
       </div>
 
-      <!-- Worker Node (Coming Soon) -->
+      <!-- Worker Node (Coming Soon) - SVG: (400, 30) = 50% x, 5% y -->
       <div *ngIf="showComingSoon" class="node node-message-worker coming-soon"
            style="left: 50%; top: -14%;">
         <span class="coming-soon-badge">Coming Soon</span>
@@ -242,32 +245,32 @@
         <span class="node-label">Worker</span>
       </div>
 
-      <!-- OpenTelemetry Node -->
+      <!-- OpenTelemetry Node - SVG: (400, 400) = 50% x, 67% y -->
       <div class="node node-telemetry"
            [class.status-processing]="getNode('otel')?.status === 'processing'"
            [class.status-success]="getNode('otel')?.status === 'success'"
            [class.status-error]="getNode('otel')?.status === 'error'"
-           style="left: 50%; top: 56%;">
+           style="left: 50%; top: 63%;">
         <span class="node-icon"><i class="fas fa-chart-line"></i></span>
         <span class="node-label">OpenTelemetry</span>
       </div>
 
-      <!-- Immersive APM Node -->
+      <!-- Immersive APM Node - SVG: (280, 530) = 35% x, 88% y -->
       <div class="node node-telemetry"
            [class.status-processing]="getNode('immersive-apm')?.status === 'processing'"
            [class.status-success]="getNode('immersive-apm')?.status === 'success'"
            [class.status-error]="getNode('immersive-apm')?.status === 'error'"
-           style="left: 35%; top: 82%;">
+           style="left: 35%; top: 84%;">
         <span class="node-icon"><i class="fas fa-cube"></i></span>
         <span class="node-label">Immersive APM</span>
       </div>
 
-      <!-- Others Node -->
+      <!-- Others Node - SVG: (520, 530) = 65% x, 88% y -->
       <div class="node node-others"
            [class.status-processing]="getNode('others')?.status === 'processing'"
            [class.status-success]="getNode('others')?.status === 'success'"
            [class.status-error]="getNode('others')?.status === 'error'"
-           style="left: 65%; top: 82%;">
+           style="left: 65%; top: 84%;">
         <span class="node-icon"><i class="fas fa-ellipsis-h"></i></span>
         <span class="node-label">Others</span>
       </div>

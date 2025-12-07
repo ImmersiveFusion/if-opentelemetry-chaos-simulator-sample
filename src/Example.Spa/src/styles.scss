@@ -1,299 +1,520 @@
 @import '@fortawesome/fontawesome-free/css/all.min.css';
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-    font-size: 14px;
-    color: #333;
-    box-sizing: border-box;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+// Futuristic color palette
+$color-primary: #00E5FF;
+$color-secondary: #7C4DFF;
+$color-accent: #FF6D00;
+$color-success: #00E676;
+$color-danger: #FF1744;
+$color-bg-dark: #0a0a0f;
+$color-bg-card: rgba(20, 20, 35, 0.8);
+$color-text: #E0E0E0;
+$color-text-muted: #888;
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    margin: 8px 0;
-  }
+// Futuristic grid background
+@mixin cyber-grid-bg {
+  background:
+    linear-gradient(rgba($color-primary, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba($color-primary, 0.03) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 0%, rgba($color-secondary, 0.15) 0%, transparent 60%),
+    linear-gradient(180deg, #0a0a0f 0%, #0d0d18 50%, #0a0a14 100%);
+  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+}
 
-  p {
-    margin: 0;
-  }
+// Glassmorphism effect
+@mixin glass-effect {
+  background: rgba(20, 20, 35, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba($color-primary, 0.2);
+}
 
-  .spacer {
-    flex: 1;
-  }
+// Neon glow
+@mixin neon-glow($color, $intensity: 0.6) {
+  box-shadow:
+    0 0 10px rgba($color, $intensity * 0.5),
+    0 0 20px rgba($color, $intensity * 0.3),
+    0 0 40px rgba($color, $intensity * 0.15),
+    inset 0 0 15px rgba($color, 0.05);
+}
 
-  .toolbar {
+// Scanline effect
+@mixin scanlines {
+  &::before {
+    content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 60px;
-    display: flex;
-    align-items: center;
-    background-color: #1976d2;
-    color: white;
-    font-weight: 600;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
   }
+}
 
-  .toolbar img {
-    margin: 0 16px;
-  }
+body {
+  font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  font-size: 14px;
+  color: $color-text;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: $color-bg-dark;
+  min-height: 100vh;
+  @include cyber-grid-bg;
+  position: relative;
+}
 
-  .toolbar #twitter-logo {
-    height: 40px;
-    margin: 0 8px;
-  }
+// Animated background particles
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba($color-primary, 0.4), transparent),
+    radial-gradient(2px 2px at 40px 70px, rgba($color-secondary, 0.3), transparent),
+    radial-gradient(1px 1px at 90px 40px, rgba($color-accent, 0.4), transparent),
+    radial-gradient(2px 2px at 130px 80px, rgba($color-primary, 0.3), transparent),
+    radial-gradient(1px 1px at 160px 120px, rgba($color-success, 0.4), transparent);
+  background-size: 200px 200px;
+  animation: particleFloat 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
 
-  .toolbar #youtube-logo {
-    height: 40px;
-    margin: 0 16px;
-  }
+@keyframes particleFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-200px); }
+}
 
-  .toolbar #twitter-logo:hover,
-  .toolbar #youtube-logo:hover {
-    opacity: 0.8;
-  }
+h1, h2, h3, h4, h5, h6 {
+  margin: 8px 0;
+  color: #fff;
+  text-shadow: 0 0 20px rgba($color-primary, 0.3);
+}
 
-  .content {
-    display: flex;
-    margin: 82px auto 32px;
-    padding: 0 16px;
-    max-width: 960px;
-    flex-direction: column;
-    align-items: center;
-  }
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, $color-primary, $color-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
-  svg.material-icons {
-    height: 24px;
-    width: auto;
-  }
+h3 {
+  font-size: 1.1rem;
+  color: rgba($color-primary, 0.9);
+  letter-spacing: 0.5px;
+}
 
-  svg.material-icons:not(:last-child) {
-    margin-right: 8px;
-  }
+p {
+  margin: 0;
+  color: $color-text-muted;
+  line-height: 1.6;
+}
 
-  .new-data {
-    font: larger;
-    color: green;
-  }
+.spacer {
+  flex: 1;
+}
 
-  .requires-account {
-    font: larger;
-    font-weight: bold;
-    color: orange;
-  }
+.toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  @include glass-effect;
+  color: white;
+  font-weight: 600;
+  z-index: 1000;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: 1px solid rgba($color-primary, 0.3);
 
-
-  .card svg.material-icons path {
-    fill: #888;
-  }
-
-  .card-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 16px;
-
-    a{
-      text-align: center;
-      display: inline-block;
-    }
-
-  }
-
-  .card {
-    all: unset;
-    border-radius: 4px;
-    border: 1px solid #eee;
-    background-color: #fafafa;
-    width: 200px;
-    margin: 0 8px 16px;
-    padding: 16px;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.2s ease-in-out;
-    line-height: 24px;
-  }
-
-  .card-container .card:not(:last-child) {
-    margin-right: 0;
-  }
-
-  .card.card-small {
-    height: 16px;
-    width: 168px;
-  }
-
-  .card-container .card:not(.highlight-card) {
-    cursor: pointer;
-  }
-
-  .card-container .card:not(.highlight-card):hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 17px rgba(0, 0, 0, 0.35);
-  }
-
-  .card-container .card:not(.highlight-card):hover .material-icons path {
-    fill: rgb(105, 103, 103);
-  }
-
-  .card.highlight-card {
-    background-color: #1976d2;
-    color: white;
-    font-weight: 600;
-    border: none;
-    width: auto;
-    min-width: 30%;
-    position: relative;
-  }
-
-  .card.circuit-closed
-  {
-    border-color: lightgreen;
-  }
-
-  
-  .card.circuit-open
-  {
-    border-color: lightcoral;
-  }
-
-
-  .card.operational
-  {
-    background-color: lightgreen;
-  }
-
-  .card.unavailable
-  {
-    background-color: lightcoral;
-  }
-
-  .card.card.highlight-card span {
-    margin-left: 60px;
-  }
-
-  .optional{
-    border-style: dashed;
-    border-width: 1px;
-    border-color: gray;
-    padding: 20px;
-  }
-
-  svg#rocket {
-    width: 80px;
+  &::after {
+    content: '';
     position: absolute;
-    left: -10px;
-    top: -24px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $color-primary, $color-secondary, $color-primary, transparent);
+    animation: toolbarGlow 3s ease-in-out infinite;
+  }
+}
+
+@keyframes toolbarGlow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+.toolbar img {
+  margin: 0 16px;
+  filter: drop-shadow(0 0 8px rgba($color-primary, 0.6));
+}
+
+.toolbar #twitter-logo {
+  height: 40px;
+  margin: 0 8px;
+}
+
+.toolbar #youtube-logo {
+  height: 40px;
+  margin: 0 16px;
+}
+
+.toolbar #twitter-logo:hover,
+.toolbar #youtube-logo:hover {
+  opacity: 0.8;
+}
+
+.toolbar span {
+  font-size: 1.2rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba($color-primary, 0.5);
+}
+
+.content {
+  display: flex;
+  margin: 82px auto 32px;
+  padding: 0 16px;
+  max-width: 1100px;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+svg.material-icons {
+  height: 24px;
+  width: auto;
+}
+
+svg.material-icons:not(:last-child) {
+  margin-right: 8px;
+}
+
+.new-data {
+  font-size: 1rem;
+  color: $color-success;
+  text-shadow: 0 0 10px rgba($color-success, 0.5);
+  animation: pulseText 2s ease-in-out infinite;
+}
+
+@keyframes pulseText {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.requires-account {
+  font-size: 1rem;
+  font-weight: bold;
+  color: $color-accent;
+  text-shadow: 0 0 10px rgba($color-accent, 0.5);
+}
+
+.card svg.material-icons path {
+  fill: $color-text-muted;
+}
+
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 16px;
+  gap: 12px;
+
+  a {
+    text-align: center;
+    display: inline-block;
+  }
+}
+
+.card {
+  all: unset;
+  border-radius: 12px;
+  border: 1px solid rgba($color-primary, 0.2);
+  background: linear-gradient(145deg, rgba(30, 30, 50, 0.8), rgba(15, 15, 30, 0.9));
+  width: 200px;
+  margin: 0 8px 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  line-height: 24px;
+  color: $color-text;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba($color-primary, 0.1), transparent);
+    transition: left 0.5s ease;
   }
 
-  svg#rocket-smoke {
-    height: calc(100vh - 95px);
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+.card-container .card:not(:last-child) {
+  margin-right: 0;
+}
+
+.card.card-small {
+  height: 16px;
+  width: 180px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-container .card:not(.highlight-card) {
+  cursor: pointer;
+}
+
+.card-container .card:not(.highlight-card):hover {
+  transform: translateY(-3px);
+  border-color: rgba($color-primary, 0.5);
+  @include neon-glow($color-primary, 0.4);
+}
+
+.card-container .card:not(.highlight-card):hover .material-icons path {
+  fill: $color-primary;
+}
+
+.card.highlight-card {
+  background: linear-gradient(135deg, rgba($color-secondary, 0.3), rgba($color-primary, 0.2));
+  border: 1px solid rgba($color-primary, 0.4);
+  color: white;
+  font-weight: 600;
+  width: auto;
+  min-width: 30%;
+  position: relative;
+  @include neon-glow($color-secondary, 0.3);
+
+  &:hover {
+    @include neon-glow($color-primary, 0.6);
+    border-color: $color-primary;
+    transform: translateY(-2px);
+  }
+}
+
+.card.circuit-closed {
+  border-color: rgba($color-success, 0.6);
+  box-shadow: 0 0 15px rgba($color-success, 0.2);
+}
+
+.card.circuit-open {
+  border-color: rgba($color-danger, 0.6);
+  box-shadow: 0 0 15px rgba($color-danger, 0.2);
+}
+
+.card.operational {
+  background: linear-gradient(145deg, rgba($color-success, 0.2), rgba($color-success, 0.1));
+  border-color: rgba($color-success, 0.5);
+}
+
+.card.unavailable {
+  background: linear-gradient(145deg, rgba($color-danger, 0.2), rgba($color-danger, 0.1));
+  border-color: rgba($color-danger, 0.5);
+}
+
+.card.card.highlight-card span {
+  margin-left: 60px;
+}
+
+.optional {
+  border-style: dashed;
+  border-width: 1px;
+  border-color: rgba($color-primary, 0.3);
+  border-radius: 12px;
+  padding: 20px;
+  background: rgba(20, 20, 35, 0.5);
+}
+
+svg#rocket {
+  width: 80px;
+  position: absolute;
+  left: -10px;
+  top: -24px;
+  filter: drop-shadow(0 0 10px rgba($color-primary, 0.5));
+}
+
+svg#rocket-smoke {
+  display: none;
+}
+
+a,
+a:visited {
+  color: $color-primary;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+a:hover {
+  color: #33EBFF; // lighter cyan
+  text-shadow: 0 0 10px rgba($color-primary, 0.5);
+}
+
+// Futuristic terminal
+.terminal {
+  position: relative;
+  border-radius: 12px;
+  padding-top: 30px;
+  margin-top: 16px;
+  overflow: auto;
+  background: linear-gradient(145deg, #0d0d15, #080810);
+  max-width: 100%;
+  width: 100%;
+  border: 1px solid rgba($color-primary, 0.2);
+  @include neon-glow($color-primary, 0.15);
+
+  // Terminal header dots
+  &::before {
+    content: '';
     position: absolute;
     top: 10px;
-    right: 180px;
-    z-index: -10;
+    left: 15px;
+    width: 12px;
+    height: 12px;
+    background: $color-danger;
+    border-radius: 50%;
+    box-shadow:
+      20px 0 0 $color-accent,
+      40px 0 0 $color-success;
   }
 
-  a,
-  a:visited,
-  a:hover {
-    color: #1976d2;
-    text-decoration: none;
+  // Scanline effect
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba($color-primary, 0.02) 2px,
+      rgba($color-primary, 0.02) 4px
+    );
+    pointer-events: none;
+    border-radius: 12px;
+  }
+}
+
+.terminal pre {
+  font-family: 'JetBrains Mono', 'Fira Code', SFMono-Regular, Consolas, monospace;
+  color: $color-primary;
+  padding: 0 1rem 1rem;
+  margin: 0;
+  white-space: pre;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  text-shadow: 0 0 5px rgba($color-primary, 0.5);
+}
+
+.circle-link {
+  height: 44px;
+  width: 44px;
+  border-radius: 50%;
+  margin: 8px;
+  background: linear-gradient(145deg, rgba(30, 30, 50, 0.8), rgba(15, 15, 30, 0.9));
+  border: 1px solid rgba($color-primary, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  svg {
+    fill: $color-primary;
+    transition: all 0.3s ease;
   }
 
-  a:hover {
-    color: #125699;
-  }
+  &:hover {
+    transform: translateY(-3px);
+    @include neon-glow($color-primary, 0.5);
+    border-color: $color-primary;
 
-  .terminal {
-    position: relative;
-    border-radius: 6px;
-    padding-top: 15px;
-    margin-top: 8px;
-    overflow: auto;
-    background-color: rgb(15, 15, 16);
-    max-width: 900px;
+    svg {
+      fill: #66F0FF; // lighter cyan
+    }
   }
+}
 
-  .terminal pre {
-    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
-    color: white;
-    padding: 0 1rem 1rem;
-    margin: 0;
-    white-space: pre;
-  }
+footer {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  line-height: 20px;
+  padding: 16px;
+  border-top: 1px solid rgba($color-primary, 0.1);
+}
 
-  .circle-link {
-    height: 40px;
-    width: 40px;
-    border-radius: 40px;
-    margin: 8px;
-    background-color: white;
-    border: 1px solid #eeeeee;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-    transition: 1s ease-out;
-  }
+footer a {
+  display: flex;
+  align-items: center;
+}
 
-  .circle-link:hover {
-    transform: translateY(-0.25rem);
-    box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);
-  }
+.github-star-badge {
+  color: $color-text;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid rgba($color-primary, 0.3);
+  border-radius: 20px;
+  background: linear-gradient(145deg, rgba(30, 30, 50, 0.8), rgba(15, 15, 30, 0.9));
+  margin-left: 4px;
+  font-weight: 600;
+  transition: all 0.3s ease;
 
-  footer {
-    margin-top: 8px;
-    display: flex;
-    align-items: center;
-    line-height: 20px;
+  &:hover {
+    border-color: $color-primary;
+    @include neon-glow($color-primary, 0.3);
   }
+}
 
-  footer a {
-    display: flex;
-    align-items: center;
-  }
+.github-star-badge .material-icons {
+  height: 16px;
+  width: 16px;
+  margin-right: 4px;
+}
 
-  .github-star-badge {
-    color: #24292e;
-    display: flex;
-    align-items: center;
-    font-size: 12px;
-    padding: 3px 10px;
-    border: 1px solid rgba(27,31,35,.2);
-    border-radius: 3px;
-    background-image: linear-gradient(-180deg,#fafbfc,#eff3f6 90%);
-    margin-left: 4px;
-    font-weight: 600;
-  }
-
-  .github-star-badge:hover {
-    background-image: linear-gradient(-180deg,#f0f3f6,#e6ebf1 90%);
-    border-color: rgba(27,31,35,.35);
-    background-position: -.5em;
-  }
-
-  .github-star-badge .material-icons {
-    height: 16px;
-    width: 16px;
-    margin-right: 4px;
-  }
-
-  svg#clouds {
-    position: fixed;
-    bottom: -160px;
-    left: -230px;
-    z-index: -10;
-    width: 1920px;
-  }
+// Hide default clouds
+svg#clouds {
+  display: none;
+}
 
   //peusdo boostrap grid system
   .row

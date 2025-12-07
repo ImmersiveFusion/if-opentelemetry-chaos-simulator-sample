@@ -1,38 +1,39 @@
-    <!-- What is this -->
-    <h2>Chaos Simulator</h2>
-    <p>Example Chaos/Failure Injection application written in Angular and .NET Core. 
-      <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp">More</a>
-      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp">Less</a>
-    </p>
-    
-    <p>&nbsp;</p>
+    <!-- Sandbox Header -->
+    <div class="sandbox-header">
+      <h2>Chaos Sandbox</h2>
+      <p class="sandbox-subtitle">Interactive failure injection environment for OpenTelemetry exploration</p>
+    </div>
 
-    <p>
-     <strong>Links and community support:</strong>
-    </p>
-
-    <p>
-      <a *ngIf="discordUrl" [href]="discordUrl" class="p-5">Discord</a>
-      <a *ngIf="gitHubUrl" [href]="gitHubUrl" class="p-5">Github</a>
+    <p class="sandbox-description">
+      Experiment with chaos engineering in a safe, isolated sandbox. Inject failures, observe telemetry, and learn how distributed systems behave under stress.
+      <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp" class="toggle-link">Show Details</a>
+      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp" class="toggle-link">Hide Details</a>
     </p>
 
-    <div *ngIf="showMoreHelp">
+    <div class="links-section">
+      <a *ngIf="discordUrl" [href]="discordUrl" target="_blank">
+        <i class="fab fa-discord"></i> Discord
+      </a>
+      <a *ngIf="gitHubUrl" [href]="gitHubUrl" target="_blank">
+        <i class="fab fa-github"></i> GitHub
+      </a>
+    </div>
+
+    <div *ngIf="showMoreHelp" class="help-section">
       <h3>What is this?</h3>
-      <p>This is a simple Angular/ASP.NET Core application that answers the question "What's the point?". It allows you to inject/eject failures into an application and see how those failures affect the telemetry that is generated. It is already preconfigured with an OpenTelemetry exporter so you don't need to change any code or enter any API keys.</p>
+      <p>A sandbox environment for experimenting with chaos engineering and OpenTelemetry. Inject failures and observe how they affect your application's telemetry - no configuration needed.</p>
 
       <h3>What this is not</h3>
-      <p>This simple application is not meant to exhaustively show all the capabilities OpenTelemetry. If you are looking for that functionality, check out the <a href="https://github.com/open-telemetry/opentelemetry-demo" target="github">OpenTelemetry demo</a>.</p>
+      <p>This is not a comprehensive OpenTelemetry demo. For that, check out the <a href="https://github.com/open-telemetry/opentelemetry-demo" target="github">OpenTelemetry demo</a>.</p>
 
       <h3>Recommended Audience</h3>
-      <p>Those interested in but not having much epxerience with OpenTelemetry.</p>
-      <p>Those not wanting or having the time to configure or run a full sample application locally or otherwise.</p>
-      <p>Those wanting to see how a happy/broken path are showing an APM tool.</p>
+      <p>Developers exploring OpenTelemetry, those wanting quick experimentation without local setup, and anyone curious about observability in distributed systems.</p>
 
-      <h3>What is sandbox?</h3>
-      <p>When this application is deployed, it has a configured OpenTelemetry exporter. Sandboxing allows users to conduct their own experiments independently without affecting each other.</p>
+      <h3>What is a sandbox?</h3>
+      <p>An isolated environment where you can conduct experiments independently without affecting other users. Each sandbox has its own telemetry stream.</p>
 
-      <h3>Find out more</h3>
-      <p>Check out the <a href="https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample#readme" target="github">full README</a> on GitHub.</p>
+      <h3>Learn More</h3>
+      <p>Check out the <a href="https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample#readme" target="github">full documentation</a> on GitHub.</p>
     </div>
 
 
@@ -46,70 +47,67 @@
     </app-network-diagram>
 
     <!-- Visualize Section -->
-    <h2>Visualize</h2>
-    <p>See the results of the induced chaos / failure injection.</p>
+    <div class="visualize-section">
+      <h2>Telemetry Output</h2>
+      <p>Monitor sandbox state and observe the effects of chaos injection in real-time.</p>
 
-    <p>&nbsp;</p>
-    
-    <h3>Basic: Terminal:</h3>
-    <p>View a very basic representation of the application state in the terminal below or DevTools (of your browser)</p>
+      <h3>System Console</h3>
+      <p class="console-description">Live output stream from your sandbox environment</p>
 
-    
-    <div>
+      <div class="terminal-controls">
+        <div class="card-container">
+          <a class="card card-small" (click)="copySandboxIdToClipboard()">
+            <i class="fas fa-copy"></i> Copy ID
+          </a>
+          <a class="card card-small" (click)="clearTerminal()">
+            <i class="fas fa-trash-alt"></i> Clear
+          </a>
+          <a class="card card-small" (click)="regenerateSandbox()">
+            <i class="fas fa-sync-alt"></i> New Sandbox
+          </a>
+        </div>
+      </div>
+
+      <!-- Terminal -->
+      <div class="terminal">
+        <pre><span class="terminal-label">SANDBOX:</span> {{sandboxId}}</pre>
+        <pre><span class="terminal-label">CIRCUITS:</span></pre>
+        <pre *ngFor="let resourceKey of getResourceKeys()"><span class="terminal-prefix">></span> {{resourceKey}}: <span [class]="resources[resourceKey] ? 'terminal-open' : 'terminal-closed'">{{resources[resourceKey] ? 'OPEN' : 'CLOSED'}}</span></pre>
+        <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
+      </div>
+    </div>
+
+    <!-- APM Section -->
+    <div class="apm-section">
+      <h3>Advanced: APM Dashboard</h3>
+      <p>Deep dive into your telemetry with full Application Performance Monitoring capabilities.</p>
+
+      <div class="card-container" *ngIf="newData">
+        <p class="new-data"><i class="fas fa-signal"></i> New telemetry data incoming - available in APM within 30 seconds</p>
+      </div>
+
+      <div class="card-container" *ngIf="requiresAccountToVisualize">
+        <p class="requires-account"><i class="fas fa-user-lock"></i> Account required to access APM visualization</p>
+      </div>
+
       <div class="card-container">
-       <a class="card card-small" (click)="copySandboxIdToClipboard()">Copy Sandbox ID</a>
-       <a class="card card-small" (click)="clearTerminal()">Clear Terminal</a>
-       <a class="card card-small" (click)="regenerateSandbox()">Regenerate Sandbox</a>
-   </div>
-
-
-    <!-- Terminal -->
-    <div class="terminal">
-      <pre>sandbox-id: {{sandboxId}}</pre>
-
-      <pre>Resource circuits:</pre>
-      <pre *ngFor="let resourceKey of getResourceKeys()"> isOpen({{resourceKey}}) => {{resources[resourceKey]}}</pre>
-      <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
-
+        <a class="card highlight-card" target="_blank" rel="noopener" (click)="visualize()">
+          <i class="fas fa-cube"></i> Launch APM
+        </a>
+        <a class="card highlight-card" target="_blank" rel="noopener" (click)="startSubscription()">
+          <i class="fas fa-rocket"></i> Get Subscription
+        </a>
+      </div>
     </div>
 
-    <p>&nbsp;</p>
+    <!-- Next Steps -->
+    <div class="next-steps">
+      <h2>Continue Exploring</h2>
+      <p>Clone the repository, run locally, or contribute to the project.</p>
 
-    <h3>Detailed: Application Peformance Monitoring (and Management):</h3>
-    <p>Get a deep presentation of the application state that is significantly more detailed and actioanlable than the terminal above or DevTools (of your browser). Be sure to check out the log view for trace details.</p>
-
-    <div class="card-container">
-      <p *ngIf="newData" class="new-data">New data should be available in the demo grid within 30 seconds! Click on Visualize in APM</p>
+      <div class="card-container">
+        <a class="card card-small" target="_blank" rel="noopener" (click)="clone()">
+          <i class="fab fa-github"></i> View Source
+        </a>
+      </div>
     </div>
-
-    <div class="card-container">
-      <p *ngIf="requiresAccountToVisualize" class="requires-account">You will need to create an account to visualize the telemetry.</p>
-    </div>
-
-    <div class="card-container">
-     
-
-
-      <a class="card highlight-card" target="_blank" rel="noopener" (click)="visualize()">
-        Visualize in APM
-      </a>
-      <a class="card highlight-card" target="_blank" rel="noopener" (click)="startSubscription()">
-        Get an APM Subscription
-      </a>
-    </div>
-
-    <h2>Next Steps</h2>
-
-    <p>Clone the code for this sandbox, run locally or contribute.</p>
-
-    <div class="card-container">
-    
-      <a class="card card-small" target="_blank" rel="noopener" (click)="clone()">
-        View on GitHub
-      </a>
-     
-    </div>
-
-  </div>
-
-

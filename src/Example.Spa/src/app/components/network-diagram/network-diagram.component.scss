@@ -6,7 +6,8 @@ $color-warning: #FF9800;
 $color-request: #2196F3;
 $color-photon: #00E5FF;
 $color-telemetry: #FF6D00;
-$color-message-worker: #9C27B0;
+$color-message-broker: #E91E63;  // Pink for message broker
+$color-message-worker: #673AB7;  // Deep purple for worker
 
 .network-diagram-container {
   width: 100%;
@@ -160,7 +161,7 @@ $color-message-worker: #9C27B0;
   }
 
   &.line-coming-soon {
-    stroke: $color-message-worker;
+    stroke: $color-message-broker;
     stroke-width: 2;
     stroke-dasharray: 5 5;
     opacity: 0.4;
@@ -329,8 +330,8 @@ $color-message-worker: #9C27B0;
 }
 
 .node-message-broker {
-  border-color: $color-message-worker;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-message-worker, 0.3);
+  border-color: $color-message-broker;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-message-broker, 0.3);
 }
 
 .node-message-worker {
@@ -348,7 +349,7 @@ $color-message-worker: #9C27B0;
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    background: linear-gradient(135deg, $color-message-worker, #6A1B9A);
+    background: linear-gradient(135deg, $color-message-broker, $color-message-worker);
     color: white;
     font-size: 8px;
     font-weight: 700;
