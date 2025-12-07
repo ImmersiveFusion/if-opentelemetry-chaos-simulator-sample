@@ -31,6 +31,7 @@
               "src/assets"
             ],
             "styles": [
+              "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
               "src/styles.scss"
             ],
             "scripts": [],
@@ -46,8 +47,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "10kb",
+                  "maximumError": "20kb"
                 }
               ],
               "outputHashing": "all"

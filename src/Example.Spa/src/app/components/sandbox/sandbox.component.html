@@ -1,204 +1,113 @@
-    <!-- What is this -->
-    <h2>Chaos Simulator</h2>
-    <p>Example Chaos/Failure Injection application written in Angular and .NET Core. 
-      <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp">More</a>
-      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp">Less</a>
-    </p>
-    
-    <p>&nbsp;</p>
+    <!-- Sandbox Header -->
+    <div class="sandbox-header">
+      <h2>Chaos Sandbox</h2>
+      <p class="sandbox-subtitle">Interactive failure injection environment for OpenTelemetry exploration</p>
+    </div>
 
-    <p>
-     <strong>Links and community support:</strong>
-    </p>
-
-    <p>
-      <a *ngIf="discordUrl" [href]="discordUrl" class="p-5">Discord</a>
-      <a *ngIf="gitHubUrl" [href]="gitHubUrl" class="p-5">Github</a>
+    <p class="sandbox-description">
+      Experiment with chaos engineering in a safe, isolated sandbox. Inject failures, observe telemetry, and learn how distributed systems behave under stress.
+      <a (click)="showMoreHelp=true" *ngIf="!showMoreHelp" class="toggle-link">Show Details</a>
+      <a (click)="showMoreHelp=false" *ngIf="showMoreHelp" class="toggle-link">Hide Details</a>
     </p>
 
-    <div *ngIf="showMoreHelp">
+    <div class="links-section">
+      <a *ngIf="discordUrl" [href]="discordUrl" target="_blank">
+        <i class="fab fa-discord"></i> Discord
+      </a>
+      <a *ngIf="gitHubUrl" [href]="gitHubUrl" target="_blank">
+        <i class="fab fa-github"></i> GitHub
+      </a>
+    </div>
+
+    <div *ngIf="showMoreHelp" class="help-section">
       <h3>What is this?</h3>
-      <p>This is a simple Angular/ASP.NET Core application that answers the question "What's the point?". It allows you to inject/eject failures into an application and see how those failures affect the telemetry that is generated. It is already preconfigured with an OpenTelemetry exporter so you don't need to change any code or enter any API keys.</p>
+      <p>A sandbox environment for experimenting with chaos engineering and OpenTelemetry. Inject failures and observe how they affect your application's telemetry - no configuration needed.</p>
 
       <h3>What this is not</h3>
-      <p>This simple application is not meant to exhaustively show all the capabilities OpenTelemetry. If you are looking for that functionality, check out the <a href="https://github.com/open-telemetry/opentelemetry-demo" target="github">OpenTelemetry demo</a>.</p>
+      <p>This is not a comprehensive OpenTelemetry demo. For that, check out the <a href="https://github.com/open-telemetry/opentelemetry-demo" target="github">OpenTelemetry demo</a>.</p>
 
       <h3>Recommended Audience</h3>
-      <p>Those interested in but not having much epxerience with OpenTelemetry.</p>
-      <p>Those not wanting or having the time to configure or run a full sample application locally or otherwise.</p>
-      <p>Those wanting to see how a happy/broken path are showing an APM tool.</p>
+      <p>Developers exploring OpenTelemetry, those wanting quick experimentation without local setup, and anyone curious about observability in distributed systems.</p>
 
-      <h3>What is sandbox?</h3>
-      <p>When this application is deployed, it has a configured OpenTelemetry exporter. Sandboxing allows users to conduct their own experiments independently without affecting each other.</p>
+      <h3>What is a sandbox?</h3>
+      <p>An isolated environment where you can conduct experiments independently without affecting other users. Each sandbox has its own telemetry stream.</p>
 
-      <h3>Find out more</h3>
-      <p>Check out the <a href="https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample#readme" target="github">full README</a> on GitHub.</p>
+      <h3>Learn More</h3>
+      <p>Check out the <a href="https://github.com/ImmersiveFusion/if-opentelemetry-chaos-simulator-sample#readme" target="github">full documentation</a> on GitHub.</p>
     </div>
 
 
 
-    <div>
-      <!-- Chaos -->
-      <h2>Step 1: Inject/Eject Failure</h2>
-      <p>Break or fix a component of the sample. </p>
+    <!-- Interactive Network Diagram -->
+    <app-network-diagram
+      [resources]="resources"
+      (connectionToggle)="toggle($event)"
+      (executeFlow)="execute($event)"
+      (logMessage)="terminalLog($event)">
+    </app-network-diagram>
 
-      <div class="card-container">
+    <!-- Visualize Section -->
+    <div class="visualize-section">
+      <h2>Telemetry Output</h2>
+      <p>Monitor sandbox state and observe the effects of chaos injection in real-time.</p>
 
-        <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.circuit-closed]="!resources[resource]" [class.circuit-open]="resources[resource]" rel="noopener" (click)="toggle(resource)">
-          <ng-container *ngIf="!resources[resource]">Break</ng-container>
-          <ng-container *ngIf="resources[resource]">Fix</ng-container>
-          {{resource | uppercase}}
-        </button>
+      <h3>System Console</h3>
+      <p class="console-description">Live output stream from your sandbox environment</p>
 
-        <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-          <span>Learn Angular</span>
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>    </a>
-
-        <a class="card" target="_blank" rel="noopener" href="https://angular.io/cli">
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
-          <span>CLI Documentation</span>
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </a>
-
-        <a class="card" target="_blank" rel="noopener" href="https://material.angular.io">
-          <svg xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px" width="21.813" height="23.453" viewBox="0 0 179.2 192.7"><path fill="#ffa726" d="M89.4 0 0 32l13.5 118.4 75.9 42.3 76-42.3L179.2 32 89.4 0z"/><path fill="#fb8c00" d="M89.4 0v192.7l76-42.3L179.2 32 89.4 0z"/><path fill="#ffe0b2" d="m102.9 146.3-63.3-30.5 36.3-22.4 63.7 30.6-36.7 22.3z"/><path fill="#fff3e0" d="M102.9 122.8 39.6 92.2l36.3-22.3 63.7 30.6-36.7 22.3z"/><path fill="#fff" d="M102.9 99.3 39.6 68.7l36.3-22.4 63.7 30.6-36.7 22.4z"/></svg>
-          <span>Angular Material</span>
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </a>
-
-        <a class="card" target="_blank" rel="noopener" href="https://blog.angular.io/">
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
-          <span>Angular Blog</span>
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </a>
-
-        <a class="card" target="_blank" rel="noopener" href="https://angular.io/devtools/">
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M14.73,13.31C15.52,12.24,16,10.93,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5C3,13.09,5.91,16,9.5,16 c1.43,0,2.74-0.48,3.81-1.27L19.59,21L21,19.59L14.73,13.31z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5 S11.99,14,9.5,14z"/><polygon points="10.29,8.44 9.5,6 8.71,8.44 6.25,8.44 8.26,10.03 7.49,12.5 9.5,10.97 11.51,12.5 10.74,10.03 12.75,8.44"/></g></g></svg>
-          <span>Angular DevTools</span>
-          <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-        </a> -->
-
+      <div class="terminal-controls">
+        <div class="card-container">
+          <a class="card card-small" (click)="copySandboxIdToClipboard()">
+            <i class="fas fa-copy"></i> Copy ID
+          </a>
+          <a class="card card-small" (click)="clearTerminal()">
+            <i class="fas fa-trash-alt"></i> Clear
+          </a>
+          <a class="card card-small" (click)="regenerateSandbox()">
+            <i class="fas fa-sync-alt"></i> New Sandbox
+          </a>
+        </div>
       </div>
 
+      <!-- Terminal -->
+      <div class="terminal">
+        <pre><span class="terminal-label">SANDBOX:</span> {{sandboxId}}</pre>
+        <pre><span class="terminal-label">CIRCUITS:</span></pre>
+        <pre *ngFor="let resourceKey of getResourceKeys()"><span class="terminal-prefix">></span> {{resourceKey}}: <span [class]="resources[resourceKey] ? 'terminal-open' : 'terminal-closed'">{{resources[resourceKey] ? 'OPEN' : 'CLOSED'}}</span></pre>
+        <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
+      </div>
     </div>
 
-    <h2>Step 2: Run a flow</h2>
-    <p>
-      <span>
-      Run operations dependent on the (broken/operational) components of the sample.
-    </span>
-      <span *ngIf="isRunning"><strong>Running flow, please wait...</strong></span>
-    </p>
-    
+    <!-- APM Section -->
+    <div class="apm-section">
+      <h3>Advanced: APM Dashboard</h3>
+      <p>Deep dive into your telemetry with full Application Performance Monitoring capabilities.</p>
 
-    <div class="card-container">
+      <div class="card-container" *ngIf="newData">
+        <p class="new-data"><i class="fas fa-signal"></i> New telemetry data incoming - available in APM within 30 seconds</p>
+      </div>
 
+      <div class="card-container" *ngIf="requiresAccountToVisualize">
+        <p class="requires-account"><i class="fas fa-user-lock"></i> Account required to access APM visualization</p>
+      </div>
 
-      <button *ngFor="let resource of getResourceKeys()" class="card" [disabled]="isRunning" [class.operational]="!resources[resource]" [class.unavailable]="resources[resource]" rel="noopener" (click)="execute(resource)">
-        Run
-        
-        <ng-container *ngIf="!resources[resource]">working</ng-container >
-        <ng-container  *ngIf="resources[resource]">broken</ng-container >
-        
-          {{resource | uppercase}} flow
-      </button>
-
-      <!-- <a class="card" target="_blank" rel="noopener" href="https://angular.io/tutorial">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>
-        <span>Learn Angular</span>
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>    </a>
-
-      <a class="card" target="_blank" rel="noopener" href="https://angular.io/cli">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
-        <span>CLI Documentation</span>
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-      </a>
-
-      <a class="card" target="_blank" rel="noopener" href="https://material.angular.io">
-        <svg xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px" width="21.813" height="23.453" viewBox="0 0 179.2 192.7"><path fill="#ffa726" d="M89.4 0 0 32l13.5 118.4 75.9 42.3 76-42.3L179.2 32 89.4 0z"/><path fill="#fb8c00" d="M89.4 0v192.7l76-42.3L179.2 32 89.4 0z"/><path fill="#ffe0b2" d="m102.9 146.3-63.3-30.5 36.3-22.4 63.7 30.6-36.7 22.3z"/><path fill="#fff3e0" d="M102.9 122.8 39.6 92.2l36.3-22.3 63.7 30.6-36.7 22.3z"/><path fill="#fff" d="M102.9 99.3 39.6 68.7l36.3-22.4 63.7 30.6-36.7 22.4z"/></svg>
-        <span>Angular Material</span>
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-      </a>
-
-      <a class="card" target="_blank" rel="noopener" href="https://blog.angular.io/">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
-        <span>Angular Blog</span>
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-      </a>
-
-      <a class="card" target="_blank" rel="noopener" href="https://angular.io/devtools/">
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24px" viewBox="0 0 24 24" width="24px" fill="#000000"><g><rect fill="none" height="24" width="24"/></g><g><g><path d="M14.73,13.31C15.52,12.24,16,10.93,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5C3,13.09,5.91,16,9.5,16 c1.43,0,2.74-0.48,3.81-1.27L19.59,21L21,19.59L14.73,13.31z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5 S11.99,14,9.5,14z"/><polygon points="10.29,8.44 9.5,6 8.71,8.44 6.25,8.44 8.26,10.03 7.49,12.5 9.5,10.97 11.51,12.5 10.74,10.03 12.75,8.44"/></g></g></svg>
-        <span>Angular DevTools</span>
-        <svg class="material-icons" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-      </a> -->
-
-    </div>
-    <!-- Next Steps -->
-    <h2>Step 3: Visualize</h2>
-    <p>See the results of the induced chaos / failure injection.</p>
-
-    <p>&nbsp;</p>
-    
-    <h3>Basic: Terminal:</h3>
-    <p>View a very basic representation of the application state in the terminal below or DevTools (of your browser)</p>
-
-    
-    <div>
       <div class="card-container">
-       <a class="card card-small" (click)="copySandboxIdToClipboard()">Copy Sandbox ID</a>
-       <a class="card card-small" (click)="clearTerminal()">Clear Terminal</a>
-       <a class="card card-small" (click)="regenerateSandbox()">Regenerate Sandbox</a>
-   </div>
-
-
-    <!-- Terminal -->
-    <div class="terminal">
-      <pre>sandbox-id: {{sandboxId}}</pre>
-
-      <pre>Resource circuits:</pre>
-      <pre *ngFor="let resourceKey of getResourceKeys()"> isOpen({{resourceKey}}) => {{resources[resourceKey]}}</pre>
-      <pre *ngFor="let line of output" [innerHTML]="line | rn2br"></pre>
-
+        <a class="card highlight-card" target="_blank" rel="noopener" (click)="visualize()">
+          <i class="fas fa-cube"></i> Launch APM
+        </a>
+        <a class="card highlight-card" target="_blank" rel="noopener" (click)="startSubscription()">
+          <i class="fas fa-rocket"></i> Get Subscription
+        </a>
+      </div>
     </div>
 
-    <p>&nbsp;</p>
+    <!-- Next Steps -->
+    <div class="next-steps">
+      <h2>Continue Exploring</h2>
+      <p>Clone the repository, run locally, or contribute to the project.</p>
 
-    <h3>Detailed: Application Peformance Monitoring (and Management):</h3>
-    <p>Get a deep presentation of the application state that is significantly more detailed and actioanlable than the terminal above or DevTools (of your browser). Be sure to check out the log view for trace details.</p>
-
-    <div class="card-container">
-      <p *ngIf="newData" class="new-data">New data should be available in the demo grid within 30 seconds! Click on Visualize in APM</p>
+      <div class="card-container">
+        <a class="card card-small" target="_blank" rel="noopener" (click)="clone()">
+          <i class="fab fa-github"></i> View Source
+        </a>
+      </div>
     </div>
-
-    <div class="card-container">
-      <p *ngIf="requiresAccountToVisualize" class="requires-account">You will need to create an account to visualize the telemetry.</p>
-    </div>
-
-    <div class="card-container">
-     
-
-
-      <a class="card highlight-card" target="_blank" rel="noopener" (click)="visualize()">
-        Visualize in APM
-      </a>
-      <a class="card highlight-card" target="_blank" rel="noopener" (click)="startSubscription()">
-        Get an APM Subscription
-      </a>
-    </div>
-
-    <h2>Next Steps</h2>
-
-    <p>Clone the code for this sandbox, run locally or contribute.</p>
-
-    <div class="card-container">
-    
-      <a class="card card-small" target="_blank" rel="noopener" (click)="clone()">
-        View on GitHub
-      </a>
-     
-    </div>
-
-  </div>
-
-
