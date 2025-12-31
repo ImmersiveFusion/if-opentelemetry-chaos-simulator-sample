@@ -132,6 +132,112 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   overflow: hidden;
 }
 
+// Status Ticker Container - horizontal stacking with separate rows
+.status-ticker-container {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ticker-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.ticker-row-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(0, 229, 255, 0.15);
+  border-radius: 4px;
+  color: $color-photon;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  i {
+    font-size: 9px;
+  }
+
+  &.telemetry {
+    background: rgba($color-telemetry, 0.15);
+    color: $color-telemetry;
+  }
+}
+
+.status-ticker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: linear-gradient(145deg, rgba(45, 45, 80, 0.95), rgba(30, 30, 56, 0.95));
+  border: 1px solid rgba($color-photon, 0.4);
+  border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba($color-photon, 0.15);
+  animation: tickerFadeIn 0.2s ease-out;
+
+  &.telemetry {
+    border-color: rgba($color-telemetry, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba($color-telemetry, 0.15);
+
+    .ticker-step {
+      background: rgba($color-telemetry, 0.3);
+      color: $color-telemetry;
+    }
+
+    .ticker-text {
+      color: rgba($color-telemetry, 0.9);
+    }
+  }
+
+  .ticker-step {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    background: rgba($color-photon, 0.2);
+    border-radius: 4px;
+    color: $color-photon;
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .ticker-text {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+  }
+}
+
+@keyframes tickerFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .connections-svg {
   position: absolute;
   top: 0;

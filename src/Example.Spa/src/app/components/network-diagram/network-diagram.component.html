@@ -19,6 +19,24 @@
   </div>
 
   <div class="network-graph">
+    <!-- Status Ticker - messages stack horizontally, telemetry on separate row -->
+    <div class="status-ticker-container" *ngIf="statusMessages.length > 0">
+      <div class="ticker-row request-row" *ngIf="requestMessages.length > 0">
+        <span class="ticker-row-label"><i class="fas fa-exchange-alt"></i></span>
+        <div class="status-ticker" *ngFor="let msg of requestMessages">
+          <span class="ticker-step">{{msg.step}}</span>
+          <span class="ticker-text">{{msg.text}}</span>
+        </div>
+      </div>
+      <div class="ticker-row telemetry-row" *ngIf="telemetryMessages.length > 0">
+        <span class="ticker-row-label telemetry"><i class="fas fa-chart-line"></i></span>
+        <div class="status-ticker telemetry" *ngFor="let msg of telemetryMessages">
+          <span class="ticker-step">{{msg.step}}</span>
+          <span class="ticker-text">{{msg.text}}</span>
+        </div>
+      </div>
+    </div>
+
     <!-- SVG for connection lines and animations -->
     <svg class="connections-svg" viewBox="0 -30 800 700" preserveAspectRatio="xMidYMid meet">
       <defs>
