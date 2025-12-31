@@ -11,6 +11,10 @@
           <input type="checkbox" [(ngModel)]="showComingSoon" />
           <span>Coming Soon</span>
         </label>
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="allowConcurrentRequests" />
+          <span>Allow Concurrent</span>
+        </label>
       </div>
       <button class="fullscreen-btn" (click)="toggleFullscreen()" [title]="isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
         <i class="fas" [class.fa-expand]="!isFullscreen" [class.fa-compress]="isFullscreen"></i>
@@ -238,12 +242,12 @@
             </div>
             <div class="flow-options" *ngIf="sqlExpanded">
               <label *ngFor="let s of sqlScenarios" class="scenario-option" [title]="s.description">
-                <input type="radio" name="sqlScenario" [value]="s.id" [(ngModel)]="selectedSqlScenario" [disabled]="isAnimating">
+                <input type="radio" name="sqlScenario" [value]="s.id" [(ngModel)]="selectedSqlScenario" [disabled]="!allowConcurrentRequests && isAnimating">
                 <span class="status-dot" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
                 <span class="option-label">{{s.label}}</span>
               </label>
             </div>
-            <button class="flow-run-btn sql" (click)="onSendRequest('sql'); $event.stopPropagation()" [disabled]="isAnimating">
+            <button class="flow-run-btn sql" (click)="onSendRequest('sql'); $event.stopPropagation()" [disabled]="!allowConcurrentRequests && isAnimating">
               <i class="fas fa-play"></i> Run
             </button>
           </div>
@@ -261,12 +265,12 @@
             </div>
             <div class="flow-options" *ngIf="redisExpanded">
               <label *ngFor="let s of redisScenarios" class="scenario-option" [title]="s.description">
-                <input type="radio" name="redisScenario" [value]="s.id" [(ngModel)]="selectedRedisScenario" [disabled]="isAnimating">
+                <input type="radio" name="redisScenario" [value]="s.id" [(ngModel)]="selectedRedisScenario" [disabled]="!allowConcurrentRequests && isAnimating">
                 <span class="status-dot" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
                 <span class="option-label">{{s.label}}</span>
               </label>
             </div>
-            <button class="flow-run-btn redis" (click)="onSendRequest('redis'); $event.stopPropagation()" [disabled]="isAnimating">
+            <button class="flow-run-btn redis" (click)="onSendRequest('redis'); $event.stopPropagation()" [disabled]="!allowConcurrentRequests && isAnimating">
               <i class="fas fa-play"></i> Run
             </button>
           </div>
@@ -370,14 +374,12 @@
   <!-- Status bar (clickable to toggle connections) -->
   <div class="status-bar">
     <span class="status-item clickable"
-          (click)="onConnectionClick(getConnectionForResource('sql')!)"
-          [class.disabled]="isAnimating">
+          (click)="onConnectionClick(getConnectionForResource('sql')!)">
       <span class="status-indicator" [class.healthy]="getConnectionForResource('sql')?.status === 'healthy'" [class.broken]="getConnectionForResource('sql')?.status === 'broken'"></span>
       SQL: {{getConnectionForResource('sql')?.status === 'healthy' ? 'Connected' : 'Broken'}}
     </span>
     <span class="status-item clickable"
-          (click)="onConnectionClick(getConnectionForResource('redis')!)"
-          [class.disabled]="isAnimating">
+          (click)="onConnectionClick(getConnectionForResource('redis')!)">
       <span class="status-indicator" [class.healthy]="getConnectionForResource('redis')?.status === 'healthy'" [class.broken]="getConnectionForResource('redis')?.status === 'broken'"></span>
       REDIS: {{getConnectionForResource('redis')?.status === 'healthy' ? 'Connected' : 'Broken'}}
     </span>

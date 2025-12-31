@@ -102,6 +102,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Animation state
   isAnimating = false;
+  allowConcurrentRequests = false; // When true, allows multiple requests during animation
 
   // Fullscreen state
   isFullscreen = false;
@@ -169,7 +170,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   onConnectionClick(connection: Connection): void {
     console.log('Connection clicked:', connection);
-    if (this.isAnimating) return;
+    // Allow toggling connections even during animations
     if (connection.resource === 'api' || connection.resource === 'otel') return;
 
     console.log('Emitting connectionToggle for:', connection.resource);
@@ -177,7 +178,8 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   }
 
   onSendRequest(resource: string): void {
-    if (this.isAnimating || this.currentFlow) return;
+    // Block concurrent requests unless explicitly allowed
+    if (!this.allowConcurrentRequests && (this.isAnimating || this.currentFlow)) return;
 
     this.isAnimating = true;
     const scenario = resource === 'sql' ? this.selectedSqlScenario : this.selectedRedisScenario;
