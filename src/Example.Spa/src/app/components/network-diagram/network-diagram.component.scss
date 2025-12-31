@@ -8,6 +8,7 @@ $color-photon: #00E5FF;
 $color-telemetry: #FF6D00;
 $color-message-broker: #E91E63;  // Pink for message broker
 $color-message-worker: #673AB7;  // Deep purple for worker
+$color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbox
 
 .network-diagram-container {
   width: 100%;
@@ -57,11 +58,7 @@ $color-message-worker: #673AB7;  // Deep purple for worker
 .network-graph {
   position: relative;
   min-height: 600px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-  background-size: 30px 30px, 30px 30px, 100% 100%;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
   border-radius: 16px;
   border: 1px solid #2a2a4a;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
@@ -81,6 +78,25 @@ $color-message-worker: #673AB7;  // Deep purple for worker
   line, circle, g {
     pointer-events: auto;
   }
+}
+
+// Chaos Sandbox border
+.chaos-sandbox-border {
+  fill: none;
+  stroke: $color-chaos-sandbox;
+  stroke-width: 2;
+  stroke-dasharray: 8 4;
+  pointer-events: none;
+}
+
+.chaos-sandbox-label {
+  fill: rgba(156, 39, 176, 0.5);
+  font-size: 14px;
+  font-weight: 600;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 // Nodes overlay layer
