@@ -414,193 +414,192 @@ foreignObject {
     white-space: nowrap;
     box-shadow: 0 2px 8px rgba($color-request, 0.5);
   }
-
-  .node-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 8px;
-
-    .btn-send {
-      flex: 1 1 calc(50% - 4px);
-      min-width: 60px;
-    }
-  }
 }
 
-// Scenario Panel - separate from client node
-.scenario-panel {
-  background: linear-gradient(145deg, rgba(45, 45, 80, 0.95), rgba(30, 30, 56, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 8px 10px;
-  pointer-events: auto;
+// Flow Section - embedded in client node
+.flow-section {
+  width: 100%;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 
-  .scenario-panel-label {
-    display: block;
-    font-size: 9px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-    text-align: center;
-  }
-
-  .scenario-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .scenario-resource {
-    font-size: 9px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    min-width: 38px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    text-align: center;
-
-    &.sql {
-      background: rgba($color-healthy, 0.2);
+  &.sql-section {
+    .flow-header i:first-child,
+    .flow-title {
       color: $color-healthy;
     }
+  }
 
-    &.redis {
-      background: rgba($color-warning, 0.2);
+  &.redis-section {
+    .flow-header i:first-child,
+    .flow-title {
       color: $color-warning;
     }
   }
 
-  .scenario-select {
-    flex: 1;
-    padding: 4px 8px;
-    font-size: 10px;
+  .flow-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 4px 0;
+
+    &:hover {
+      .flow-title, .flow-current {
+        opacity: 1;
+      }
+    }
+
+    i:first-child {
+      font-size: 10px;
+      flex-shrink: 0;
+    }
+
+    .flow-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .flow-current {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.6);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .toggle-icon {
+      font-size: 8px;
+      color: rgba(255, 255, 255, 0.4);
+      transition: transform 0.2s ease;
+      flex-shrink: 0;
+
+      &.expanded {
+        transform: rotate(180deg);
+      }
+    }
+  }
+
+  .flow-options {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 6px 0;
+    padding-left: 16px;
+  }
+
+  .scenario-option {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    padding: 1px 0;
+
+    &:hover .option-label {
+      color: rgba(255, 255, 255, 1);
+    }
+
+    input[type="radio"] {
+      width: 10px;
+      height: 10px;
+      margin: 0;
+      flex-shrink: 0;
+      accent-color: #9C27B0;
+      cursor: pointer;
+    }
+
+    input[type="radio"]:checked ~ .option-label {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    input[type="radio"]:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input[type="radio"]:disabled ~ .option-label {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .status-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.success {
+      background: $color-healthy;
+      box-shadow: 0 0 3px rgba($color-healthy, 0.5);
+    }
+
+    &.error {
+      background: $color-broken;
+      box-shadow: 0 0 3px rgba($color-broken, 0.5);
+    }
+  }
+
+  .option-label {
+    font-size: 9px;
     font-weight: 500;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.15s ease;
+  }
+
+  .flow-run-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: none;
     border-radius: 4px;
     cursor: pointer;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cpath fill='%23888' d='M0 2l4 4 4-4z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 6px center;
-    padding-right: 20px;
+    transition: all 0.2s ease;
+    color: white;
 
-    &:hover:not(:disabled) {
-      border-color: rgba(255, 255, 255, 0.3);
-      background-color: rgba(0, 0, 0, 0.4);
+    i {
+      font-size: 8px;
+    }
+
+    &.sql {
+      background: linear-gradient(135deg, $color-healthy, darken($color-healthy, 15%));
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 2px 8px rgba($color-healthy, 0.4);
+      }
+    }
+
+    &.redis {
+      background: linear-gradient(135deg, $color-warning, darken($color-warning, 15%));
+
+      &:hover:not(:disabled) {
+        box-shadow: 0 2px 8px rgba($color-warning, 0.4);
+      }
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-
-    option {
-      background: #1e1e38;
-      color: #fff;
-      padding: 4px;
-    }
   }
-}
-
-// Flow Legend
-.flow-legend {
-  background: linear-gradient(145deg, rgba(45, 45, 80, 0.95), rgba(30, 30, 56, 0.95));
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px 12px;
-  pointer-events: auto;
-
-  .legend-title {
-    display: block;
-    font-size: 9px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.5);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
-    text-align: center;
-  }
-
-  .legend-section {
-    margin-bottom: 8px;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .legend-section-label {
-    display: block;
-    font-size: 8px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-bottom: 4px;
-    width: fit-content;
-
-    &.sql {
-      background: rgba($color-healthy, 0.2);
-      color: $color-healthy;
-    }
-
-    &.redis {
-      background: rgba($color-warning, 0.2);
-      color: $color-warning;
-    }
-  }
-
-  .legend-list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 8px;
-
-    li {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-  }
-
-  .legend-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-
-    &.success {
-      background: $color-healthy;
-      box-shadow: 0 0 4px rgba($color-healthy, 0.5);
-    }
-
-    &.error {
-      background: $color-broken;
-      box-shadow: 0 0 4px rgba($color-broken, 0.5);
-    }
-  }
-
-  .legend-name {
-    font-size: 9px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.7);
-  }
-
 }
 
 .node-api {
@@ -760,13 +759,6 @@ foreignObject {
   }
 }
 
-.btn-sql {
-  background: linear-gradient(135deg, $color-healthy, #2E7D32);
-}
-
-.btn-redis {
-  background: linear-gradient(135deg, $color-warning, #E65100);
-}
 
 // Status bar
 .status-bar {

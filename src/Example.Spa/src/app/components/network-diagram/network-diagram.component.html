@@ -20,7 +20,7 @@
 
   <div class="network-graph">
     <!-- SVG for connection lines and animations -->
-    <svg class="connections-svg" viewBox="0 -30 800 680" preserveAspectRatio="xMidYMid meet">
+    <svg class="connections-svg" viewBox="0 -30 800 700" preserveAspectRatio="xMidYMid meet">
       <defs>
         <!-- Photon glow filter -->
         <filter id="photonGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -197,8 +197,8 @@
       </g>
 
       <!-- HTML Nodes inside SVG using foreignObject -->
-      <!-- Client Node: Line ends at x=80, so center node there (x = 80 - width/2 = 80 - 85 = -5) -->
-      <foreignObject x="-5" y="180" width="170" height="140">
+      <!-- Client Node with embedded flows -->
+      <foreignObject x="-5" y="140" [attr.height]="getClientNodeHeight()" width="170">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-client"
              [class.status-processing]="getNode('client')?.status === 'processing'"
              [class.status-success]="getNode('client')?.status === 'success'"
@@ -206,58 +206,51 @@
           <span class="node-badge">You</span>
           <span class="node-icon"><i class="fas fa-user"></i></span>
           <span class="node-label">Client</span>
-          <span class="node-sublabel">Execute Flows</span>
-          <div class="node-actions">
-            <button class="btn-send btn-sql" (click)="onSendRequest('sql')" [disabled]="isAnimating">
-              <i class="fas fa-play"></i> SQL
-            </button>
-            <button class="btn-send btn-redis" (click)="onSendRequest('redis')" [disabled]="isAnimating">
-              <i class="fas fa-play"></i> Redis
-            </button>
-          </div>
-        </div>
-      </foreignObject>
 
-      <!-- Scenario Panel - positioned below client -->
-      <foreignObject x="-15" y="330" width="190" height="90">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="scenario-panel">
-          <span class="scenario-panel-label">Scenario</span>
-          <div class="scenario-row">
-            <span class="scenario-resource sql">SQL</span>
-            <select [(ngModel)]="selectedSqlScenario" class="scenario-select" [disabled]="isAnimating">
-              <option *ngFor="let s of sqlScenarios" [value]="s.id">{{s.label}}</option>
-            </select>
+          <!-- SQL Flow Section -->
+          <div class="flow-section sql-section">
+            <div class="flow-header" (click)="toggleSqlExpanded()">
+              <i class="fas fa-database"></i>
+              <span class="flow-title">SQL</span>
+              <span class="flow-current" *ngIf="!sqlExpanded">
+                <span class="status-dot" [class.success]="!getSelectedScenario('sql')?.expectsError" [class.error]="getSelectedScenario('sql')?.expectsError"></span>
+                {{getSelectedScenarioLabel('sql')}}
+              </span>
+              <i class="fas fa-chevron-down toggle-icon" [class.expanded]="sqlExpanded"></i>
+            </div>
+            <div class="flow-options" *ngIf="sqlExpanded">
+              <label *ngFor="let s of sqlScenarios" class="scenario-option" [title]="s.description">
+                <input type="radio" name="sqlScenario" [value]="s.id" [(ngModel)]="selectedSqlScenario" [disabled]="isAnimating">
+                <span class="status-dot" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
+                <span class="option-label">{{s.label}}</span>
+              </label>
+            </div>
+            <button class="flow-run-btn sql" (click)="onSendRequest('sql'); $event.stopPropagation()" [disabled]="isAnimating">
+              <i class="fas fa-play"></i> Run
+            </button>
           </div>
-          <div class="scenario-row">
-            <span class="scenario-resource redis">Redis</span>
-            <select [(ngModel)]="selectedRedisScenario" class="scenario-select" [disabled]="isAnimating">
-              <option *ngFor="let s of redisScenarios" [value]="s.id">{{s.label}}</option>
-            </select>
-          </div>
-        </div>
-      </foreignObject>
 
-      <!-- Flow Legend - positioned below scenario panel -->
-      <foreignObject x="-15" y="430" width="190" height="200">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="flow-legend">
-          <span class="legend-title">Flow Scenarios</span>
-          <div class="legend-section">
-            <span class="legend-section-label sql">SQL</span>
-            <ul class="legend-list">
-              <li *ngFor="let s of sqlScenarios" [class.expects-error]="s.expectsError" [title]="s.description">
-                <span class="legend-indicator" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
-                <span class="legend-name">{{s.label}}</span>
-              </li>
-            </ul>
-          </div>
-          <div class="legend-section">
-            <span class="legend-section-label redis">Redis</span>
-            <ul class="legend-list">
-              <li *ngFor="let s of redisScenarios" [class.expects-error]="s.expectsError" [title]="s.description">
-                <span class="legend-indicator" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
-                <span class="legend-name">{{s.label}}</span>
-              </li>
-            </ul>
+          <!-- Redis Flow Section -->
+          <div class="flow-section redis-section">
+            <div class="flow-header" (click)="toggleRedisExpanded()">
+              <i class="fas fa-bolt"></i>
+              <span class="flow-title">Redis</span>
+              <span class="flow-current" *ngIf="!redisExpanded">
+                <span class="status-dot" [class.success]="!getSelectedScenario('redis')?.expectsError" [class.error]="getSelectedScenario('redis')?.expectsError"></span>
+                {{getSelectedScenarioLabel('redis')}}
+              </span>
+              <i class="fas fa-chevron-down toggle-icon" [class.expanded]="redisExpanded"></i>
+            </div>
+            <div class="flow-options" *ngIf="redisExpanded">
+              <label *ngFor="let s of redisScenarios" class="scenario-option" [title]="s.description">
+                <input type="radio" name="redisScenario" [value]="s.id" [(ngModel)]="selectedRedisScenario" [disabled]="isAnimating">
+                <span class="status-dot" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
+                <span class="option-label">{{s.label}}</span>
+              </label>
+            </div>
+            <button class="flow-run-btn redis" (click)="onSendRequest('redis'); $event.stopPropagation()" [disabled]="isAnimating">
+              <i class="fas fa-play"></i> Run
+            </button>
           </div>
         </div>
       </foreignObject>

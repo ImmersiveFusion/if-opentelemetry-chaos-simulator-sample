@@ -1,5 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { networkDiagramAnimations } from './network-diagram.animations';
+import { SQL_SCENARIOS, REDIS_SCENARIOS, FlowScenario, SqlScenario, RedisScenario } from '../../services/flow.service';
+
+export interface FlowRequest {
+  resource: string;
+  scenario: string;
+}
 
 export interface NetworkNode {
   id: string;
@@ -49,10 +55,18 @@ const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
 export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() resources: { [id: string]: boolean } = {};
   @Output() connectionToggle = new EventEmitter<string>();
-  @Output() executeFlow = new EventEmitter<string>();
+  @Output() executeFlow = new EventEmitter<FlowRequest>();
   @Output() logMessage = new EventEmitter<string>();
 
   @ViewChild('diagramContainer') diagramContainer!: ElementRef<HTMLDivElement>;
+
+  // Scenario configuration
+  sqlScenarios: FlowScenario[] = SQL_SCENARIOS;
+  redisScenarios: FlowScenario[] = REDIS_SCENARIOS;
+  selectedSqlScenario: SqlScenario = 'success';
+  selectedRedisScenario: RedisScenario = 'success';
+  sqlExpanded = false;
+  redisExpanded = false;
 
   // Nodes
   nodes: NetworkNode[] = [
@@ -160,8 +174,37 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     if (this.isAnimating || this.currentFlow) return;
 
     this.isAnimating = true;
-    this.executeFlow.emit(resource);
+    const scenario = resource === 'sql' ? this.selectedSqlScenario : this.selectedRedisScenario;
+    this.executeFlow.emit({ resource, scenario });
     this.startFlowAnimation(resource);
+  }
+
+  toggleSqlExpanded(): void {
+    this.sqlExpanded = !this.sqlExpanded;
+  }
+
+  toggleRedisExpanded(): void {
+    this.redisExpanded = !this.redisExpanded;
+  }
+
+  getSelectedScenario(resource: string): FlowScenario | undefined {
+    if (resource === 'sql') {
+      return this.sqlScenarios.find(s => s.id === this.selectedSqlScenario);
+    } else {
+      return this.redisScenarios.find(s => s.id === this.selectedRedisScenario);
+    }
+  }
+
+  getSelectedScenarioLabel(resource: string): string {
+    const scenario = this.getSelectedScenario(resource);
+    return scenario?.label || 'Roundtrip';
+  }
+
+  getClientNodeHeight(): number {
+    const baseHeight = 100; // Header section
+    const sqlHeight = this.sqlExpanded ? 140 : 65; // Expanded vs collapsed
+    const redisHeight = this.redisExpanded ? 160 : 65; // Redis has more options
+    return baseHeight + sqlHeight + redisHeight;
   }
 
   private async startFlowAnimation(resource: string): Promise<void> {
