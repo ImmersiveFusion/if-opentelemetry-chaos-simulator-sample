@@ -17,6 +17,7 @@ import { NetworkDiagramComponent } from './components/network-diagram/network-di
 import { SandboxService } from './services/sandbox.service';
 import { FlowService } from './services/flow.service';
 import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
+import { ScenarioDescriptionPipe } from './pipes/scenario-description.pipe';
 
 
 
@@ -25,7 +26,8 @@ import { ReplaceLineBreaksPipe } from './pipes/replace-line-breaks.pipe';
         AppComponent,
         SandboxComponent,
         NetworkDiagramComponent,
-        ReplaceLineBreaksPipe
+        ReplaceLineBreaksPipe,
+        ScenarioDescriptionPipe
     ],
     imports: [
         BrowserModule,

@@ -66,9 +66,8 @@ body {
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: $color-bg-dark;
+  background: linear-gradient(180deg, #0a0a0f 0%, #0d0d18 50%, #0a0a14 100%);
   min-height: 100vh;
-  @include cyber-grid-bg;
   position: relative;
 }
 

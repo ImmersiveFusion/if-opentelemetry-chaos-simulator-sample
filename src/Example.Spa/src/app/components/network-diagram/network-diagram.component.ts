@@ -1,5 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { networkDiagramAnimations } from './network-diagram.animations';
+import { SQL_SCENARIOS, REDIS_SCENARIOS, FlowScenario, SqlScenario, RedisScenario } from '../../services/flow.service';
+
+export interface FlowRequest {
+  resource: string;
+  scenario: string;
+}
 
 export interface NetworkNode {
   id: string;
@@ -26,17 +32,17 @@ export interface RequestFlow {
 }
 
 // SVG coordinate positions for each node (matches SVG line endpoints)
-// Based on viewBox="0 0 800 600" - aligned with HTML node positions
+// Based on viewBox="0 0 800 650" - aligned with HTML node positions
 const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
-  'client': { x: 80, y: 250 },   // Left side (10%), middle (35%)
-  'api': { x: 400, y: 250 },     // Center (50%), same height as client (35%)
-  'sql': { x: 720, y: 170 },     // Right side (90%), above API (20%)
-  'redis': { x: 720, y: 350 },   // Right side (90%), below API (50%)
-  'message-broker': { x: 720, y: 70 },   // Right side (90%), top (-1%)
-  'message-worker': { x: 400, y: 30 },   // Center (50%), top (-14%)
-  'otel': { x: 400, y: 400 },    // Center (50%), below API (60%)
-  'immersive-apm': { x: 280, y: 530 },  // Left-center (35%), bottom (85%)
-  'others': { x: 520, y: 530 }          // Right-center (65%), bottom (85%)
+  'client': { x: 80, y: 250 },   // Left side (10%), middle
+  'api': { x: 400, y: 250 },     // Center (50%), same height as client
+  'sql': { x: 720, y: 220 },     // Right side (90%), above API
+  'redis': { x: 720, y: 350 },   // Right side (90%), below API
+  'message-broker': { x: 720, y: 100 },   // Right side (90%), top
+  'message-worker': { x: 400, y: 100 },   // Center (50%), top
+  'otel': { x: 400, y: 520 },    // Center (50%), below API - matches line endpoint
+  'immersive-apm': { x: 280, y: 590 },  // Left-center (35%), bottom
+  'others': { x: 520, y: 590 }          // Right-center (65%), bottom
 };
 
 @Component({
@@ -49,10 +55,18 @@ const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
 export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() resources: { [id: string]: boolean } = {};
   @Output() connectionToggle = new EventEmitter<string>();
-  @Output() executeFlow = new EventEmitter<string>();
+  @Output() executeFlow = new EventEmitter<FlowRequest>();
   @Output() logMessage = new EventEmitter<string>();
 
   @ViewChild('diagramContainer') diagramContainer!: ElementRef<HTMLDivElement>;
+
+  // Scenario configuration
+  sqlScenarios: FlowScenario[] = SQL_SCENARIOS;
+  redisScenarios: FlowScenario[] = REDIS_SCENARIOS;
+  selectedSqlScenario: SqlScenario = 'success';
+  selectedRedisScenario: RedisScenario = 'success';
+  sqlExpanded = false;
+  redisExpanded = false;
 
   // Nodes
   nodes: NetworkNode[] = [
@@ -88,6 +102,10 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Animation state
   isAnimating = false;
+  allowConcurrentRequests = false; // When true, allows multiple requests during animation
+
+  // Fullscreen state
+  isFullscreen = false;
 
   // Request dot animation
   requestDotVisible = false;
@@ -109,6 +127,12 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   sqlTelemetryDotProgress = 0;
   redisTelemetryDotVisible = false;
   redisTelemetryDotProgress = 0;
+
+  // Status ticker - messages stack horizontally and linger
+  statusMessages: { id: number; text: string; type: 'request' | 'telemetry'; step: number }[] = [];
+  private messageIdCounter = 0;
+  private stepCounter = 0;
+  private lastDisappearTime = 0; // Track when the last message is scheduled to disappear
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -146,7 +170,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   onConnectionClick(connection: Connection): void {
     console.log('Connection clicked:', connection);
-    if (this.isAnimating) return;
+    // Allow toggling connections even during animations
     if (connection.resource === 'api' || connection.resource === 'otel') return;
 
     console.log('Emitting connectionToggle for:', connection.resource);
@@ -154,11 +178,75 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   }
 
   onSendRequest(resource: string): void {
-    if (this.isAnimating || this.currentFlow) return;
+    // Block concurrent requests unless explicitly allowed
+    if (!this.allowConcurrentRequests && (this.isAnimating || this.currentFlow)) return;
 
     this.isAnimating = true;
-    this.executeFlow.emit(resource);
+    const scenario = resource === 'sql' ? this.selectedSqlScenario : this.selectedRedisScenario;
+    this.executeFlow.emit({ resource, scenario });
     this.startFlowAnimation(resource);
+  }
+
+  toggleSqlExpanded(): void {
+    this.sqlExpanded = !this.sqlExpanded;
+  }
+
+  toggleRedisExpanded(): void {
+    this.redisExpanded = !this.redisExpanded;
+  }
+
+  getSelectedScenario(resource: string): FlowScenario | undefined {
+    if (resource === 'sql') {
+      return this.sqlScenarios.find(s => s.id === this.selectedSqlScenario);
+    } else {
+      return this.redisScenarios.find(s => s.id === this.selectedRedisScenario);
+    }
+  }
+
+  getSelectedScenarioLabel(resource: string): string {
+    const scenario = this.getSelectedScenario(resource);
+    return scenario?.label || 'Roundtrip';
+  }
+
+  getClientNodeHeight(): number {
+    const baseHeight = 100; // Header section
+    const sqlHeight = this.sqlExpanded ? 140 : 65; // Expanded vs collapsed
+    const redisHeight = this.redisExpanded ? 160 : 65; // Redis has more options
+    return baseHeight + sqlHeight + redisHeight;
+  }
+
+  private addStatusMessage(text: string, type: 'request' | 'telemetry' = 'request'): void {
+    const id = ++this.messageIdCounter;
+    const step = ++this.stepCounter;
+    this.statusMessages.push({ id, text, type, step });
+    this.cdr.detectChanges();
+
+    // Sequential disappearance - each message disappears 800ms after the previous one
+    const now = Date.now();
+    const baseDelay = 1500; // Minimum time a message stays visible
+    const staggerDelay = 800; // Time between each message disappearing
+
+    // Schedule this message to disappear after the last one, or after baseDelay if first
+    const disappearTime = Math.max(now + baseDelay, this.lastDisappearTime + staggerDelay);
+    this.lastDisappearTime = disappearTime;
+
+    const delay = disappearTime - now;
+    setTimeout(() => {
+      this.statusMessages = this.statusMessages.filter(m => m.id !== id);
+      this.cdr.detectChanges();
+    }, delay);
+  }
+
+  private resetStepCounters(): void {
+    this.stepCounter = 0;
+  }
+
+  get requestMessages() {
+    return this.statusMessages.filter(m => m.type === 'request');
+  }
+
+  get telemetryMessages() {
+    return this.statusMessages.filter(m => m.type === 'telemetry');
   }
 
   private async startFlowAnimation(resource: string): Promise<void> {
@@ -166,6 +254,10 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     if (!targetConnection) return;
 
     const isBroken = targetConnection.status === 'broken';
+    const targetLabel = resource === 'sql' ? 'SQL Database' : 'Redis Cache';
+
+    // Reset step counters for new animation
+    this.resetStepCounters();
 
     this.currentFlow = {
       id: Date.now().toString(),
@@ -176,6 +268,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
     // Step 1: Client pulses briefly
     this.setNodeStatus('client', 'processing');
+    this.addStatusMessage('Sending request to API', 'request');
     await this.delay(100);
 
     // Step 2: Travel to API - initialize position BEFORE making visible
@@ -186,17 +279,20 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     this.setNodeStatus('client', 'idle'); // Stop pulsing once dot starts moving
     await this.animateDot('client', 'api', 400);
     this.setNodeStatus('api', 'processing');
+    this.addStatusMessage('API processing request', 'request');
 
     await this.delay(300);
 
     // Step 3: Travel to target
     this.currentFlow!.status = 'traveling-to-target';
     const targetNodeId = resource === 'sql' ? 'sql' : 'redis';
+    this.addStatusMessage(`API querying ${targetLabel}`, 'request');
 
     if (isBroken) {
       // Animate partially then explode
       await this.animateDot('api', targetNodeId, 300, 0.6);
       this.setNodeStatus('api', 'error');
+      this.addStatusMessage(`Connection to ${targetLabel} failed!`, 'request');
 
       // Show explosion
       this.requestDotClass = 'dot-error';
@@ -213,6 +309,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
       this.setNodeStatus('api', 'error');
       await this.delay(300);
       this.setNodeStatus('client', 'error');
+      this.addStatusMessage('Error returned to client', 'request');
 
       // Send telemetry on error (fire and forget)
       this.animateTelemetry();
@@ -227,6 +324,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
       await this.animateDot('api', targetNodeId, 400);
       this.setNodeStatus('api', 'idle');
       this.setNodeStatus(targetNodeId, 'success');
+      this.addStatusMessage(`${targetLabel} responding`, 'request');
 
       // Fire optional telemetry from the target node (SQL or Redis) to OpenTelemetry
       if (resource === 'sql') {
@@ -240,14 +338,17 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
       // Return journey
       this.currentFlow!.status = 'returning';
       this.requestDotClass = 'dot-success';
+      this.addStatusMessage(`${targetLabel} returning data`, 'request');
       await this.animateDot(targetNodeId, 'api', 400);
       this.setNodeStatus(targetNodeId, 'idle');
 
       // Send telemetry when request completes at API (fire and forget)
       this.animateTelemetry();
 
+      this.addStatusMessage('API responding to client', 'request');
       await this.animateDot('api', 'client', 400);
       this.setNodeStatus('client', 'success');
+      this.addStatusMessage('Request completed', 'request');
       await this.delay(300);
 
       this.currentFlow!.status = 'success';
@@ -259,9 +360,10 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     this.isAnimating = false;
   }
 
-  private async animateTelemetry(): Promise<void> {
+  private async animateTelemetry(source: string = 'API'): Promise<void> {
     this.telemetryDotProgress = 0;
     this.telemetryDotVisible = true;
+    this.addStatusMessage(`${source} sending telemetry to OTel`, 'telemetry');
     this.cdr.detectChanges();
 
     const steps = 20;
@@ -275,19 +377,21 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
     this.setNodeStatus('otel', 'processing');
     this.telemetryDotVisible = false;
+    this.addStatusMessage(`OTel processing ${source} traces`, 'telemetry');
 
     // Fire dots to Immersive APM and Others in parallel
-    this.animateToImmersiveApm();
-    this.animateToOthers();
+    this.animateToImmersiveApm(source);
+    this.animateToOthers(source);
 
     await this.delay(400);
     this.setNodeStatus('otel', 'idle');
     this.cdr.detectChanges();
   }
 
-  private async animateToImmersiveApm(): Promise<void> {
+  private async animateToImmersiveApm(source: string = 'API'): Promise<void> {
     this.immersiveApmDotProgress = 0;
     this.immersiveApmDotVisible = true;
+    this.addStatusMessage(`Exporting ${source} traces to IAPM`, 'telemetry');
     this.cdr.detectChanges();
 
     const steps = 20;
@@ -300,15 +404,17 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     }
 
     this.setNodeStatus('immersive-apm', 'processing');
+    this.addStatusMessage(`IAPM received ${source} traces`, 'telemetry');
     await this.delay(300);
     this.immersiveApmDotVisible = false;
     this.setNodeStatus('immersive-apm', 'idle');
     this.cdr.detectChanges();
   }
 
-  private async animateToOthers(): Promise<void> {
+  private async animateToOthers(source: string = 'API'): Promise<void> {
     this.othersDotProgress = 0;
     this.othersDotVisible = true;
+    this.addStatusMessage(`Exporting ${source} traces to Others`, 'telemetry');
     this.cdr.detectChanges();
 
     const steps = 20;
@@ -321,6 +427,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     }
 
     this.setNodeStatus('others', 'processing');
+    this.addStatusMessage(`Others received ${source} traces`, 'telemetry');
     await this.delay(300);
     this.othersDotVisible = false;
     this.setNodeStatus('others', 'idle');
@@ -386,10 +493,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for telemetry dot
+  // Get SVG position for telemetry dot (follows line from API at y=300 to OTel at y=440)
   getTelemetryDotSvgPosition(): { x: number; y: number } {
-    const from = NODE_POSITIONS['api'];
-    const to = NODE_POSITIONS['otel'];
+    // Line: x1="400" y1="300" x2="400" y2="440"
+    const from = { x: 400, y: 300 };
+    const to = { x: 400, y: 440 };
 
     return {
       x: from.x + (to.x - from.x) * this.telemetryDotProgress,
@@ -397,10 +505,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Immersive APM dot
+  // Get SVG position for Immersive APM dot (follows line from OTel at y=520 to IAPM at y=590)
   getImmersiveApmDotSvgPosition(): { x: number; y: number } {
-    const from = NODE_POSITIONS['otel'];
-    const to = NODE_POSITIONS['immersive-apm'];
+    // Line: x1="400" y1="520" x2="280" y2="590"
+    const from = { x: 400, y: 520 };
+    const to = { x: 280, y: 590 };
 
     return {
       x: from.x + (to.x - from.x) * this.immersiveApmDotProgress,
@@ -408,10 +517,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Others dot
+  // Get SVG position for Others dot (follows line from OTel at y=520 to Others at y=590)
   getOthersDotSvgPosition(): { x: number; y: number } {
-    const from = NODE_POSITIONS['otel'];
-    const to = NODE_POSITIONS['others'];
+    // Line: x1="400" y1="520" x2="520" y2="590"
+    const from = { x: 400, y: 520 };
+    const to = { x: 520, y: 590 };
 
     return {
       x: from.x + (to.x - from.x) * this.othersDotProgress,
@@ -436,19 +546,19 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Get SVG position for SQL telemetry dot (along curved path)
   getSqlTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 170 Q 620 320 400 400 (matches HTML)
-    const start = { x: 720, y: 170 };
-    const control = { x: 620, y: 320 };
-    const end = { x: 400, y: 400 };
+    // Path: M 720 220 Q 620 400 400 470 (matches HTML)
+    const start = { x: 720, y: 220 };
+    const control = { x: 620, y: 400 };
+    const end = { x: 400, y: 470 };
     return this.getQuadraticBezierPosition(start, control, end, this.sqlTelemetryDotProgress);
   }
 
   // Get SVG position for Redis telemetry dot (along curved path)
   getRedisTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 350 Q 600 400 400 400 (matches HTML)
+    // Path: M 720 350 Q 600 450 400 470 (matches HTML)
     const start = { x: 720, y: 350 };
-    const control = { x: 600, y: 400 };
-    const end = { x: 400, y: 400 };
+    const control = { x: 600, y: 450 };
+    const end = { x: 400, y: 470 };
     return this.getQuadraticBezierPosition(start, control, end, this.redisTelemetryDotProgress);
   }
 
@@ -458,6 +568,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
     this.sqlTelemetryDotProgress = 0;
     this.sqlTelemetryDotVisible = true;
+    this.addStatusMessage('SQL sending telemetry to OTel', 'telemetry');
     this.cdr.detectChanges();
 
     const steps = 20;
@@ -470,11 +581,12 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     }
 
     this.sqlTelemetryDotVisible = false;
+    this.addStatusMessage('OTel processing SQL traces', 'telemetry');
 
     // When SQL telemetry reaches OpenTelemetry, forward to APM destinations
     this.setNodeStatus('otel', 'processing');
-    this.animateToImmersiveApm();
-    this.animateToOthers();
+    this.animateToImmersiveApm('SQL');
+    this.animateToOthers('SQL');
     await this.delay(400);
     this.setNodeStatus('otel', 'idle');
     this.cdr.detectChanges();
@@ -486,6 +598,7 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
     this.redisTelemetryDotProgress = 0;
     this.redisTelemetryDotVisible = true;
+    this.addStatusMessage('Redis sending telemetry to OTel', 'telemetry');
     this.cdr.detectChanges();
 
     const steps = 20;
@@ -498,13 +611,25 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     }
 
     this.redisTelemetryDotVisible = false;
+    this.addStatusMessage('OTel processing Redis traces', 'telemetry');
 
     // When Redis telemetry reaches OpenTelemetry, forward to APM destinations
     this.setNodeStatus('otel', 'processing');
-    this.animateToImmersiveApm();
-    this.animateToOthers();
+    this.animateToImmersiveApm('Redis');
+    this.animateToOthers('Redis');
     await this.delay(400);
     this.setNodeStatus('otel', 'idle');
     this.cdr.detectChanges();
+  }
+
+  // Toggle fullscreen mode
+  toggleFullscreen(): void {
+    this.isFullscreen = !this.isFullscreen;
+
+    if (this.isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
   }
 }

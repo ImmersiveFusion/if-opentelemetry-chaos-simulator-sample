@@ -1,10 +1,11 @@
 import { ChangeDetectorRef, Component, EventEmitter, OnInit } from '@angular/core';
 import { SandboxService } from '../../services/sandbox.service';
-import { FlowService } from '../../services/flow.service';
+import { FlowService, SqlScenario, RedisScenario } from '../../services/flow.service';
 import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
 import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
+import { FlowRequest } from '../network-diagram/network-diagram.component';
 
 @Component({
     selector: 'app-sandbox',
@@ -168,59 +169,62 @@ export class SandboxComponent implements OnInit {
 
   }
 
-  execute(resource: string) {
-    
-    this.terminalLog(`Executing ${resource} request. Please wait... (if failure was injected this may take a few seconds)`)
-    
+  execute(flowRequest: FlowRequest | string) {
+    // Handle both old string format and new FlowRequest format
+    const resource = typeof flowRequest === 'string' ? flowRequest : flowRequest.resource;
+    const scenario = typeof flowRequest === 'string' ? 'success' : flowRequest.scenario;
+
+    this.terminalLog(`Executing ${resource} request (scenario: ${scenario}). Please wait... (if failure was injected this may take a few seconds)`)
+
     this.isRunning++;
 
     switch(resource)
     {
       case 'sql':
-        this.flowService.executeSql(this.sandboxId!)
+        this.flowService.executeSql(this.sandboxId!, scenario as SqlScenario)
         .pipe(
           tap(() => {
-            //nothing  
+            //nothing
           }),
           catchError(e => {
             this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
             return of({failed: true});
           }),
           first())
-          
+
         .subscribe((response: any) => {
           this.isRunning--;
           this.newData++;
-          
-          if (response.failed)
-          {
-            return;
-          }         
 
-          this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
-        });
-        break;
-      case 'redis':
-        this.flowService.executeRedis(this.sandboxId!)
-        .pipe(
-          tap(() => {
-            //nothing  
-          }),
-          catchError(e => {
-            this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
-            return of({failed: true});
-          }),
-          first())
-        .subscribe((response: any) => {
-          this.isRunning--;          
-          this.newData++;
-          
           if (response.failed)
           {
             return;
           }
 
-          this.terminalLog(`[SUCCESS]: ${resource} completed successfully: ${JSON.stringify(response.value)}`)
+          this.terminalLog(`[SUCCESS]: ${resource} (${scenario}) completed successfully: ${JSON.stringify(response.value)}`)
+        });
+        break;
+      case 'redis':
+        this.flowService.executeRedis(this.sandboxId!, scenario as RedisScenario)
+        .pipe(
+          tap(() => {
+            //nothing
+          }),
+          catchError(e => {
+            this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
+            return of({failed: true});
+          }),
+          first())
+        .subscribe((response: any) => {
+          this.isRunning--;
+          this.newData++;
+
+          if (response.failed)
+          {
+            return;
+          }
+
+          this.terminalLog(`[SUCCESS]: ${resource} (${scenario}) completed successfully: ${JSON.stringify(response.value)}`)
 
         });
         break;
