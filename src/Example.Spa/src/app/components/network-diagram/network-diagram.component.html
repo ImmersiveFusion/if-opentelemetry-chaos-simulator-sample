@@ -198,7 +198,7 @@
 
       <!-- HTML Nodes inside SVG using foreignObject -->
       <!-- Client Node: Line ends at x=80, so center node there (x = 80 - width/2 = 80 - 85 = -5) -->
-      <foreignObject x="-5" y="170" width="170" height="160">
+      <foreignObject x="-5" y="180" width="170" height="140">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-client"
              [class.status-processing]="getNode('client')?.status === 'processing'"
              [class.status-success]="getNode('client')?.status === 'success'"
@@ -206,14 +206,58 @@
           <span class="node-badge">You</span>
           <span class="node-icon"><i class="fas fa-user"></i></span>
           <span class="node-label">Client</span>
-          <span class="node-sublabel">Example Flows</span>
+          <span class="node-sublabel">Execute Flows</span>
           <div class="node-actions">
             <button class="btn-send btn-sql" (click)="onSendRequest('sql')" [disabled]="isAnimating">
-              <i class="fas fa-play"></i> SQL Flow
+              <i class="fas fa-play"></i> SQL
             </button>
             <button class="btn-send btn-redis" (click)="onSendRequest('redis')" [disabled]="isAnimating">
-              <i class="fas fa-play"></i> Redis Flow
+              <i class="fas fa-play"></i> Redis
             </button>
+          </div>
+        </div>
+      </foreignObject>
+
+      <!-- Scenario Panel - positioned below client -->
+      <foreignObject x="-15" y="330" width="190" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="scenario-panel">
+          <span class="scenario-panel-label">Scenario</span>
+          <div class="scenario-row">
+            <span class="scenario-resource sql">SQL</span>
+            <select [(ngModel)]="selectedSqlScenario" class="scenario-select" [disabled]="isAnimating">
+              <option *ngFor="let s of sqlScenarios" [value]="s.id">{{s.label}}</option>
+            </select>
+          </div>
+          <div class="scenario-row">
+            <span class="scenario-resource redis">Redis</span>
+            <select [(ngModel)]="selectedRedisScenario" class="scenario-select" [disabled]="isAnimating">
+              <option *ngFor="let s of redisScenarios" [value]="s.id">{{s.label}}</option>
+            </select>
+          </div>
+        </div>
+      </foreignObject>
+
+      <!-- Flow Legend - positioned below scenario panel -->
+      <foreignObject x="-15" y="430" width="190" height="200">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="flow-legend">
+          <span class="legend-title">Flow Scenarios</span>
+          <div class="legend-section">
+            <span class="legend-section-label sql">SQL</span>
+            <ul class="legend-list">
+              <li *ngFor="let s of sqlScenarios" [class.expects-error]="s.expectsError" [title]="s.description">
+                <span class="legend-indicator" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
+                <span class="legend-name">{{s.label}}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="legend-section">
+            <span class="legend-section-label redis">Redis</span>
+            <ul class="legend-list">
+              <li *ngFor="let s of redisScenarios" [class.expects-error]="s.expectsError" [title]="s.description">
+                <span class="legend-indicator" [class.success]="!s.expectsError" [class.error]="s.expectsError"></span>
+                <span class="legend-name">{{s.label}}</span>
+              </li>
+            </ul>
           </div>
         </div>
       </foreignObject>
@@ -223,7 +267,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-api"
              [class.status-processing]="getNode('api')?.status === 'processing'"
              [class.status-success]="getNode('api')?.status === 'success'"
-             [class.status-error]="getNode('api')?.status === 'error'">
+             [class.status-error]="getNode('api')?.status === 'error'"
+             title="Backend API&#10;The central service that handles requests and coordinates with dependencies like databases and caches.">
           <span class="node-icon"><i class="fas fa-server"></i></span>
           <span class="node-label">API</span>
         </div>
@@ -234,7 +279,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-database"
              [class.status-processing]="getNode('sql')?.status === 'processing'"
              [class.status-success]="getNode('sql')?.status === 'success'"
-             [class.status-error]="getNode('sql')?.status === 'error'">
+             [class.status-error]="getNode('sql')?.status === 'error'"
+             title="SQL Database&#10;Primary data store dependency. Simulates real database operations with configurable latency and failure scenarios.">
           <span class="node-icon"><i class="fas fa-database"></i></span>
           <span class="node-label">SQL Database</span>
         </div>
@@ -245,7 +291,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-cache"
              [class.status-processing]="getNode('redis')?.status === 'processing'"
              [class.status-success]="getNode('redis')?.status === 'success'"
-             [class.status-error]="getNode('redis')?.status === 'error'">
+             [class.status-error]="getNode('redis')?.status === 'error'"
+             title="Redis Cache&#10;In-memory cache dependency for fast data access. Used to demonstrate caching patterns and failure resilience.">
           <span class="node-icon"><i class="fas fa-bolt"></i></span>
           <span class="node-label">Redis Cache</span>
         </div>
@@ -253,7 +300,8 @@
 
       <!-- Message Broker Node (Coming Soon): Line ends at x=720 -->
       <foreignObject *ngIf="showComingSoon" x="645" y="60" width="150" height="75">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-broker coming-soon">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-broker coming-soon"
+             title="Message Broker&#10;Asynchronous messaging system for decoupled communication. Enables pub/sub and queue-based patterns.">
           <span class="coming-soon-badge">Coming Soon</span>
           <span class="node-icon"><i class="fas fa-exchange-alt"></i></span>
           <span class="node-label">Message Broker</span>
@@ -262,7 +310,8 @@
 
       <!-- Worker Node (Coming Soon): Line starts at x=400 -->
       <foreignObject *ngIf="showComingSoon" x="340" y="60" width="120" height="75">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-worker coming-soon">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-worker coming-soon"
+             title="Background Worker&#10;Processes async jobs from the message broker. Handles long-running tasks outside the request cycle.">
           <span class="coming-soon-badge">Coming Soon</span>
           <span class="node-icon"><i class="fas fa-cogs"></i></span>
           <span class="node-label">Worker</span>
@@ -274,7 +323,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
              [class.status-processing]="getNode('otel')?.status === 'processing'"
              [class.status-success]="getNode('otel')?.status === 'success'"
-             [class.status-error]="getNode('otel')?.status === 'error'">
+             [class.status-error]="getNode('otel')?.status === 'error'"
+             title="OpenTelemetry Collector&#10;Collects traces, metrics, and logs using vendor-neutral instrumentation.&#10;Learn more at opentelemetry.io">
           <span class="node-icon"><i class="fas fa-chart-line"></i></span>
           <span class="node-label">OpenTelemetry</span>
         </div>
@@ -285,7 +335,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
              [class.status-processing]="getNode('immersive-apm')?.status === 'processing'"
              [class.status-success]="getNode('immersive-apm')?.status === 'success'"
-             [class.status-error]="getNode('immersive-apm')?.status === 'error'">
+             [class.status-error]="getNode('immersive-apm')?.status === 'error'"
+             title="Immersive APM&#10;3D visualization of your application's telemetry data for intuitive performance monitoring.">
           <span class="node-icon"><i class="fas fa-cube"></i></span>
           <span class="node-label">Immersive APM</span>
         </div>
@@ -296,7 +347,8 @@
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-others"
              [class.status-processing]="getNode('others')?.status === 'processing'"
              [class.status-success]="getNode('others')?.status === 'success'"
-             [class.status-error]="getNode('others')?.status === 'error'">
+             [class.status-error]="getNode('others')?.status === 'error'"
+             title="Other Backends&#10;OpenTelemetry can export to many backends: Jaeger, Zipkin, Prometheus, and more.">
           <span class="node-icon"><i class="fas fa-ellipsis-h"></i></span>
           <span class="node-label">Others</span>
         </div>
