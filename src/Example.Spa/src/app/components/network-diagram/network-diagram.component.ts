@@ -26,17 +26,17 @@ export interface RequestFlow {
 }
 
 // SVG coordinate positions for each node (matches SVG line endpoints)
-// Based on viewBox="0 0 800 600" - aligned with HTML node positions
+// Based on viewBox="0 0 800 650" - aligned with HTML node positions
 const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
-  'client': { x: 80, y: 250 },   // Left side (10%), middle (35%)
-  'api': { x: 400, y: 250 },     // Center (50%), same height as client (35%)
-  'sql': { x: 720, y: 170 },     // Right side (90%), above API (20%)
-  'redis': { x: 720, y: 350 },   // Right side (90%), below API (50%)
-  'message-broker': { x: 720, y: 70 },   // Right side (90%), top (-1%)
-  'message-worker': { x: 400, y: 30 },   // Center (50%), top (-14%)
-  'otel': { x: 400, y: 400 },    // Center (50%), below API (60%)
-  'immersive-apm': { x: 280, y: 530 },  // Left-center (35%), bottom (85%)
-  'others': { x: 520, y: 530 }          // Right-center (65%), bottom (85%)
+  'client': { x: 80, y: 250 },   // Left side (10%), middle
+  'api': { x: 400, y: 250 },     // Center (50%), same height as client
+  'sql': { x: 720, y: 220 },     // Right side (90%), above API
+  'redis': { x: 720, y: 350 },   // Right side (90%), below API
+  'message-broker': { x: 720, y: 100 },   // Right side (90%), top
+  'message-worker': { x: 400, y: 100 },   // Center (50%), top
+  'otel': { x: 400, y: 470 },    // Center (50%), below API
+  'immersive-apm': { x: 280, y: 590 },  // Left-center (35%), bottom
+  'others': { x: 520, y: 590 }          // Right-center (65%), bottom
 };
 
 @Component({
@@ -88,6 +88,9 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Animation state
   isAnimating = false;
+
+  // Fullscreen state
+  isFullscreen = false;
 
   // Request dot animation
   requestDotVisible = false;
@@ -436,19 +439,19 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Get SVG position for SQL telemetry dot (along curved path)
   getSqlTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 170 Q 620 320 400 400 (matches HTML)
-    const start = { x: 720, y: 170 };
-    const control = { x: 620, y: 320 };
-    const end = { x: 400, y: 400 };
+    // Path: M 720 220 Q 620 400 400 470 (matches HTML)
+    const start = { x: 720, y: 220 };
+    const control = { x: 620, y: 400 };
+    const end = { x: 400, y: 470 };
     return this.getQuadraticBezierPosition(start, control, end, this.sqlTelemetryDotProgress);
   }
 
   // Get SVG position for Redis telemetry dot (along curved path)
   getRedisTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 350 Q 600 400 400 400 (matches HTML)
+    // Path: M 720 350 Q 600 450 400 470 (matches HTML)
     const start = { x: 720, y: 350 };
-    const control = { x: 600, y: 400 };
-    const end = { x: 400, y: 400 };
+    const control = { x: 600, y: 450 };
+    const end = { x: 400, y: 470 };
     return this.getQuadraticBezierPosition(start, control, end, this.redisTelemetryDotProgress);
   }
 
@@ -506,5 +509,16 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     await this.delay(400);
     this.setNodeStatus('otel', 'idle');
     this.cdr.detectChanges();
+  }
+
+  // Toggle fullscreen mode
+  toggleFullscreen(): void {
+    this.isFullscreen = !this.isFullscreen;
+
+    if (this.isFullscreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
   }
 }

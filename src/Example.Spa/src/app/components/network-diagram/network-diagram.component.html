@@ -1,21 +1,26 @@
-<div class="network-diagram-container" #diagramContainer>
+<div class="network-diagram-container" #diagramContainer [class.fullscreen]="isFullscreen">
   <div class="diagram-header">
     <p class="instructions">Click on connections to break/restore them. Click buttons to send requests.</p>
-    <div class="visibility-toggles">
-      <label class="toggle-label">
-        <input type="checkbox" [(ngModel)]="showOptionalCapabilities" />
-        <span>Optional Capabilities</span>
-      </label>
-      <label class="toggle-label">
-        <input type="checkbox" [(ngModel)]="showComingSoon" />
-        <span>Coming Soon</span>
-      </label>
+    <div class="header-controls">
+      <div class="visibility-toggles">
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="showOptionalCapabilities" />
+          <span>Optional Capabilities</span>
+        </label>
+        <label class="toggle-label">
+          <input type="checkbox" [(ngModel)]="showComingSoon" />
+          <span>Coming Soon</span>
+        </label>
+      </div>
+      <button class="fullscreen-btn" (click)="toggleFullscreen()" [title]="isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'">
+        <i class="fas" [class.fa-expand]="!isFullscreen" [class.fa-compress]="isFullscreen"></i>
+      </button>
     </div>
   </div>
 
   <div class="network-graph">
     <!-- SVG for connection lines and animations -->
-    <svg class="connections-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+    <svg class="connections-svg" viewBox="0 -30 800 680" preserveAspectRatio="xMidYMid meet">
       <defs>
         <!-- Photon glow filter -->
         <filter id="photonGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -27,9 +32,15 @@
         </filter>
       </defs>
 
-      <!-- Chaos Sandbox Border -->
-      <rect x="320" y="100" width="480" height="320" rx="20" ry="20" class="chaos-sandbox-border"/>
-      <text x="560" y="130" class="chaos-sandbox-label">Chaos Sandbox</text>
+      <!-- Chaos Sandbox Border - resizes when Coming Soon is enabled -->
+      <!-- Bottom stays at y=410, top expands upward when Coming Soon is enabled -->
+      <rect x="320"
+            [attr.y]="showComingSoon ? 5 : 150"
+            width="480"
+            [attr.height]="showComingSoon ? 405 : 260"
+            rx="20" ry="20"
+            class="chaos-sandbox-border"/>
+      <text x="560" [attr.y]="showComingSoon ? 35 : 180" class="chaos-sandbox-label">Chaos Sandbox</text>
 
       <!-- Connection Lines -->
       <!-- Client to API (always healthy) -->
@@ -37,10 +48,10 @@
             class="connection-line line-healthy"/>
 
       <!-- API to SQL - invisible hit area + visible line -->
-      <line x1="400" y1="250" x2="720" y2="170"
+      <line x1="400" y1="250" x2="720" y2="220"
             class="connection-hit-area"
             (click)="onConnectionClick(getConnectionForResource('sql')!)"/>
-      <line x1="400" y1="250" x2="720" y2="170"
+      <line x1="400" y1="250" x2="720" y2="220"
             class="connection-line"
             [class.line-healthy]="getConnectionForResource('sql')?.status === 'healthy'"
             [class.line-broken]="getConnectionForResource('sql')?.status === 'broken'"
@@ -58,47 +69,47 @@
             [class.breakable]="true"
             (click)="onConnectionClick(getConnectionForResource('redis')!)"/>
 
-      <!-- Message Worker to Message Broker (Coming Soon) - two offset lines for bidirectional -->
-      <line *ngIf="showComingSoon" x1="400" y1="30" x2="720" y2="70"
+      <!-- Message Worker to Message Broker (Coming Soon) - horizontal bidirectional -->
+      <line *ngIf="showComingSoon" x1="460" y1="97" x2="645" y2="97"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="720" y1="73" x2="400" y2="33"
+      <line *ngIf="showComingSoon" x1="645" y1="103" x2="460" y2="103"
             class="connection-line line-coming-soon"/>
 
-      <!-- Message Broker to API (Coming Soon) - two offset lines for bidirectional -->
-      <line *ngIf="showComingSoon" x1="720" y1="90" x2="400" y2="230"
+      <!-- Message Broker to API (Coming Soon) - diagonal bidirectional -->
+      <line *ngIf="showComingSoon" x1="720" y1="135" x2="430" y2="210"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="400" y1="230" x2="720" y2="90"
+      <line *ngIf="showComingSoon" x1="420" y1="210" x2="710" y2="135"
             class="connection-line line-coming-soon"/>
 
       <!-- API to OpenTelemetry -->
-      <line x1="400" y1="270" x2="400" y2="380"
+      <line x1="400" y1="300" x2="400" y2="440"
             class="connection-line line-telemetry"/>
 
       <!-- SQL to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 170 Q 620 320 400 400"
+            d="M 720 220 Q 620 400 400 470"
             class="connection-line line-telemetry-sql"/>
 
       <!-- Redis to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 350 Q 600 400 400 400"
+            d="M 720 350 Q 600 450 400 470"
             class="connection-line line-telemetry-redis"/>
 
       <!-- OpenTelemetry to Immersive APM -->
-      <line x1="400" y1="420" x2="280" y2="530"
+      <line x1="400" y1="520" x2="280" y2="590"
             class="connection-line line-telemetry"/>
 
       <!-- OpenTelemetry to Others -->
-      <line x1="400" y1="420" x2="520" y2="530"
+      <line x1="400" y1="520" x2="520" y2="590"
             class="connection-line line-others"/>
 
       <!-- Break indicators (clickable to fix) -->
-      <!-- SQL break indicator at midpoint of line from (400,250) to (720,170) = (560, 210) -->
+      <!-- SQL break indicator at midpoint of line from (400,250) to (720,220) = (560, 235) -->
       <g *ngIf="getConnectionForResource('sql')?.status === 'broken'"
          class="break-indicator-svg clickable"
          (click)="onConnectionClick(getConnectionForResource('sql')!)">
-        <circle cx="560" cy="210" r="14" fill="#f44336" class="break-pulse"/>
-        <text x="560" y="215" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
+        <circle cx="560" cy="235" r="14" fill="#f44336" class="break-pulse"/>
+        <text x="560" y="240" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
       </g>
 
       <!-- Redis break indicator at midpoint of line from (400,250) to (720,350) = (560, 300) -->
@@ -184,101 +195,113 @@
               text-anchor="middle"
               font-size="30">💥</text>
       </g>
-    </svg>
 
-    <!-- HTML Nodes Layer (overlaid on SVG) -->
-    <!-- Node positions use percentages that map to SVG viewBox 800x600 -->
-    <div class="nodes-overlay">
-      <!-- Client Node - SVG: (80, 250) = 10% x, 42% y -->
-      <div class="node node-client"
-           [class.status-processing]="getNode('client')?.status === 'processing'"
-           [class.status-success]="getNode('client')?.status === 'success'"
-           [class.status-error]="getNode('client')?.status === 'error'"
-           style="left: 20%; top: 34%;">
-        <span class="node-icon"><i class="fas fa-user"></i></span>
-        <span class="node-label">Client</span>
-        <div class="node-actions">
-          <button class="btn-send btn-sql" (click)="onSendRequest('sql')" [disabled]="isAnimating">SQL</button>
-          <button class="btn-send btn-redis" (click)="onSendRequest('redis')" [disabled]="isAnimating">Redis</button>
+      <!-- HTML Nodes inside SVG using foreignObject -->
+      <!-- Client Node: Line ends at x=80, so center node there (x = 80 - width/2 = 80 - 85 = -5) -->
+      <foreignObject x="-5" y="170" width="170" height="160">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-client"
+             [class.status-processing]="getNode('client')?.status === 'processing'"
+             [class.status-success]="getNode('client')?.status === 'success'"
+             [class.status-error]="getNode('client')?.status === 'error'">
+          <span class="node-badge">You</span>
+          <span class="node-icon"><i class="fas fa-user"></i></span>
+          <span class="node-label">Client</span>
+          <span class="node-sublabel">Example Flows</span>
+          <div class="node-actions">
+            <button class="btn-send btn-sql" (click)="onSendRequest('sql')" [disabled]="isAnimating">
+              <i class="fas fa-play"></i> SQL Flow
+            </button>
+            <button class="btn-send btn-redis" (click)="onSendRequest('redis')" [disabled]="isAnimating">
+              <i class="fas fa-play"></i> Redis Flow
+            </button>
+          </div>
         </div>
-      </div>
+      </foreignObject>
 
-      <!-- API Node - SVG: (400, 250) = 50% x, 42% y -->
-      <div class="node node-api"
-           [class.status-processing]="getNode('api')?.status === 'processing'"
-           [class.status-success]="getNode('api')?.status === 'success'"
-           [class.status-error]="getNode('api')?.status === 'error'"
-           style="left: 50%; top: 32%;">
-        <span class="node-icon"><i class="fas fa-server"></i></span>
-        <span class="node-label">API</span>
-      </div>
+      <!-- API Node: Line ends at x=400, so center node there (x = 400 - width/2 = 400 - 60 = 340) -->
+      <foreignObject x="340" y="200" width="120" height="100">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-api"
+             [class.status-processing]="getNode('api')?.status === 'processing'"
+             [class.status-success]="getNode('api')?.status === 'success'"
+             [class.status-error]="getNode('api')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-server"></i></span>
+          <span class="node-label">API</span>
+        </div>
+      </foreignObject>
 
-      <!-- SQL Node - SVG: (720, 170) = 90% x, 28% y -->
-      <div class="node node-database"
-           [class.status-processing]="getNode('sql')?.status === 'processing'"
-           [class.status-success]="getNode('sql')?.status === 'success'"
-           [class.status-error]="getNode('sql')?.status === 'error'"
-           style="left: 80%; top: 24%;">
-        <span class="node-icon"><i class="fas fa-database"></i></span>
-        <span class="node-label">SQL Database</span>
-      </div>
+      <!-- SQL Node: Line ends at x=720, so center node there (x = 720 - width/2 = 720 - 70 = 650) -->
+      <foreignObject x="650" y="170" width="140" height="100">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-database"
+             [class.status-processing]="getNode('sql')?.status === 'processing'"
+             [class.status-success]="getNode('sql')?.status === 'success'"
+             [class.status-error]="getNode('sql')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-database"></i></span>
+          <span class="node-label">SQL Database</span>
+        </div>
+      </foreignObject>
 
-      <!-- Redis Node - SVG: (720, 350) = 90% x, 58% y -->
-      <div class="node node-cache"
-           [class.status-processing]="getNode('redis')?.status === 'processing'"
-           [class.status-success]="getNode('redis')?.status === 'success'"
-           [class.status-error]="getNode('redis')?.status === 'error'"
-           style="left: 80%; top: 52%;">
-        <span class="node-icon"><i class="fas fa-bolt"></i></span>
-        <span class="node-label">Redis Cache</span>
-      </div>
+      <!-- Redis Node: Line ends at x=720, so center node there (x = 720 - width/2 = 720 - 70 = 650) -->
+      <foreignObject x="650" y="300" width="140" height="100">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-cache"
+             [class.status-processing]="getNode('redis')?.status === 'processing'"
+             [class.status-success]="getNode('redis')?.status === 'success'"
+             [class.status-error]="getNode('redis')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-bolt"></i></span>
+          <span class="node-label">Redis Cache</span>
+        </div>
+      </foreignObject>
 
-      <!-- Message Broker Node (Coming Soon) - SVG: (720, 70) = 90% x, 12% y -->
-      <div *ngIf="showComingSoon" class="node node-message-broker coming-soon"
-           style="left: 80%; top: 6%;">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <span class="node-icon"><i class="fas fa-exchange-alt"></i></span>
-        <span class="node-label">Message Broker</span>
-      </div>
+      <!-- Message Broker Node (Coming Soon): Line ends at x=720 -->
+      <foreignObject *ngIf="showComingSoon" x="645" y="60" width="150" height="75">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-broker coming-soon">
+          <span class="coming-soon-badge">Coming Soon</span>
+          <span class="node-icon"><i class="fas fa-exchange-alt"></i></span>
+          <span class="node-label">Message Broker</span>
+        </div>
+      </foreignObject>
 
-      <!-- Worker Node (Coming Soon) - SVG: (400, 30) = 50% x, 5% y -->
-      <div *ngIf="showComingSoon" class="node node-message-worker coming-soon"
-           style="left: 50%; top: -14%;">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <span class="node-icon"><i class="fas fa-cogs"></i></span>
-        <span class="node-label">Worker</span>
-      </div>
+      <!-- Worker Node (Coming Soon): Line starts at x=400 -->
+      <foreignObject *ngIf="showComingSoon" x="340" y="60" width="120" height="75">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-worker coming-soon">
+          <span class="coming-soon-badge">Coming Soon</span>
+          <span class="node-icon"><i class="fas fa-cogs"></i></span>
+          <span class="node-label">Worker</span>
+        </div>
+      </foreignObject>
 
-      <!-- OpenTelemetry Node - SVG: (400, 400) = 50% x, 67% y -->
-      <div class="node node-telemetry"
-           [class.status-processing]="getNode('otel')?.status === 'processing'"
-           [class.status-success]="getNode('otel')?.status === 'success'"
-           [class.status-error]="getNode('otel')?.status === 'error'"
-           style="left: 50%; top: 63%;">
-        <span class="node-icon"><i class="fas fa-chart-line"></i></span>
-        <span class="node-label">OpenTelemetry</span>
-      </div>
+      <!-- OpenTelemetry Node: Lines connect at x=400, y=380-420 range -->
+      <foreignObject x="330" y="430" width="140" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
+             [class.status-processing]="getNode('otel')?.status === 'processing'"
+             [class.status-success]="getNode('otel')?.status === 'success'"
+             [class.status-error]="getNode('otel')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-chart-line"></i></span>
+          <span class="node-label">OpenTelemetry</span>
+        </div>
+      </foreignObject>
 
-      <!-- Immersive APM Node - SVG: (280, 530) = 35% x, 88% y -->
-      <div class="node node-telemetry"
-           [class.status-processing]="getNode('immersive-apm')?.status === 'processing'"
-           [class.status-success]="getNode('immersive-apm')?.status === 'success'"
-           [class.status-error]="getNode('immersive-apm')?.status === 'error'"
-           style="left: 35%; top: 84%;">
-        <span class="node-icon"><i class="fas fa-cube"></i></span>
-        <span class="node-label">Immersive APM</span>
-      </div>
+      <!-- Immersive APM Node: Line ends at x=280 y=530 -->
+      <foreignObject x="205" y="550" width="150" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
+             [class.status-processing]="getNode('immersive-apm')?.status === 'processing'"
+             [class.status-success]="getNode('immersive-apm')?.status === 'success'"
+             [class.status-error]="getNode('immersive-apm')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-cube"></i></span>
+          <span class="node-label">Immersive APM</span>
+        </div>
+      </foreignObject>
 
-      <!-- Others Node - SVG: (520, 530) = 65% x, 88% y -->
-      <div class="node node-others"
-           [class.status-processing]="getNode('others')?.status === 'processing'"
-           [class.status-success]="getNode('others')?.status === 'success'"
-           [class.status-error]="getNode('others')?.status === 'error'"
-           style="left: 65%; top: 84%;">
-        <span class="node-icon"><i class="fas fa-ellipsis-h"></i></span>
-        <span class="node-label">Others</span>
-      </div>
-    </div>
+      <!-- Others Node: Line ends at x=520 y=530 -->
+      <foreignObject x="460" y="550" width="120" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-others"
+             [class.status-processing]="getNode('others')?.status === 'processing'"
+             [class.status-success]="getNode('others')?.status === 'success'"
+             [class.status-error]="getNode('others')?.status === 'error'">
+          <span class="node-icon"><i class="fas fa-ellipsis-h"></i></span>
+          <span class="node-label">Others</span>
+        </div>
+      </foreignObject>
+    </svg>
   </div>
 
   <!-- Status bar (clickable to toggle connections) -->
