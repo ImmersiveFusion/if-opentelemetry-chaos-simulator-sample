@@ -220,7 +220,7 @@
 
       <!-- HTML Nodes inside SVG using foreignObject -->
       <!-- Client Node with embedded flows -->
-      <foreignObject x="-5" y="140" [attr.height]="getClientNodeHeight()" width="170">
+      <foreignObject x="-5" y="140" [attr.height]="getClientNodeHeight()" width="250">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-client"
              [class.status-processing]="getNode('client')?.status === 'processing'"
              [class.status-success]="getNode('client')?.status === 'success'"
@@ -271,6 +271,31 @@
               </label>
             </div>
             <button class="flow-run-btn redis" (click)="onSendRequest('redis'); $event.stopPropagation()" [disabled]="!allowConcurrentRequests && isAnimating">
+              <i class="fas fa-play"></i> Run
+            </button>
+          </div>
+
+          <!-- Pipeline Flow Section -->
+          <div class="flow-section pipeline-section">
+            <div class="flow-header" (click)="togglePipelineExpanded()">
+              <i class="fas fa-project-diagram"></i>
+              <span class="flow-title">Simulation</span>
+              <span class="flow-current" *ngIf="!pipelineExpanded">
+                <span class="status-dot success"></span>
+                {{getSelectedPipelineScenarioLabel()}}
+              </span>
+              <i class="fas fa-chevron-down toggle-icon" [class.expanded]="pipelineExpanded"></i>
+            </div>
+            <div class="flow-options" *ngIf="pipelineExpanded">
+              <label *ngFor="let s of pipelineScenarios" class="scenario-option">
+                <input type="radio" name="pipelineScenario" [value]="s.id" [(ngModel)]="selectedPipelineScenario" [disabled]="!allowConcurrentRequests && isAnimating">
+                <span class="status-dot success"></span>
+                <span class="option-label">{{s.label}}</span>
+                <span class="option-desc">{{s.description}}</span>
+              </label>
+            </div>
+            <span class="flow-desc" *ngIf="!pipelineExpanded">{{getSelectedPipelineScenarioDescription()}}</span>
+            <button class="flow-run-btn pipeline" (click)="onSendRequest('pipeline'); $event.stopPropagation()" [disabled]="!allowConcurrentRequests && isAnimating">
               <i class="fas fa-play"></i> Run
             </button>
           </div>
@@ -383,5 +408,77 @@
       <span class="status-indicator" [class.healthy]="getConnectionForResource('redis')?.status === 'healthy'" [class.broken]="getConnectionForResource('redis')?.status === 'broken'"></span>
       REDIS: {{getConnectionForResource('redis')?.status === 'healthy' ? 'Connected' : 'Broken'}}
     </span>
+  </div>
+
+  <!-- Flow Explanations -->
+  <div class="flow-explanations">
+    <div class="explanation-card" [class.expanded]="sqlExplanationExpanded">
+      <div class="explanation-header" (click)="sqlExplanationExpanded = !sqlExplanationExpanded">
+        <i class="fas fa-database"></i>
+        <span>SQL Flow</span>
+        <i class="fas fa-chevron-down expand-icon" [class.rotated]="sqlExplanationExpanded"></i>
+      </div>
+      <p>Executes a query against SQL Server. Click the connection line to simulate a network failure.</p>
+      <div class="explanation-details" *ngIf="sqlExplanationExpanded">
+        <h4>Available Scenarios:</h4>
+        <ul>
+          <li><strong>Roundtrip</strong> - Normal query execution returning a GUID and timestamp</li>
+          <li><strong>Wrong Table</strong> - Query references non-existent table (generates SQL error span)</li>
+          <li><strong>Wrong Column</strong> - Query references non-existent column (generates SQL error span)</li>
+          <li><strong>Syntax Error</strong> - Malformed SQL syntax (generates parse error span)</li>
+          <li><strong>Division Error</strong> - Division by zero (generates arithmetic error span)</li>
+        </ul>
+        <h4>Telemetry Generated:</h4>
+        <p>Each request creates spans with <code>db.system</code>, <code>db.operation</code>, and error details when applicable.</p>
+      </div>
+    </div>
+    <div class="explanation-card" [class.expanded]="redisExplanationExpanded">
+      <div class="explanation-header" (click)="redisExplanationExpanded = !redisExplanationExpanded">
+        <i class="fas fa-bolt"></i>
+        <span>Redis Flow</span>
+        <i class="fas fa-chevron-down expand-icon" [class.rotated]="redisExplanationExpanded"></i>
+      </div>
+      <p>Performs cache operations against Redis. Click the connection line to simulate Redis being unavailable.</p>
+      <div class="explanation-details" *ngIf="redisExplanationExpanded">
+        <h4>Available Scenarios:</h4>
+        <ul>
+          <li><strong>Roundtrip</strong> - Normal SET/GET operation cycle</li>
+          <li><strong>Missing Key</strong> - GET on non-existent key (returns null, no error)</li>
+          <li><strong>Large Value</strong> - Store 10KB payload to simulate memory pressure</li>
+          <li><strong>Expired Key</strong> - Key expires immediately after SET</li>
+          <li><strong>Serialization Error</strong> - Simulates corrupt data during deserialization</li>
+          <li><strong>Invalid Operation</strong> - Wrong data type operation (WRONGTYPE error)</li>
+        </ul>
+        <h4>Telemetry Generated:</h4>
+        <p>Each request creates spans with <code>db.system=redis</code>, <code>db.operation</code> (GET/SET), and cache-specific attributes.</p>
+      </div>
+    </div>
+    <div class="explanation-card" [class.expanded]="pipelineExplanationExpanded">
+      <div class="explanation-header" (click)="pipelineExplanationExpanded = !pipelineExplanationExpanded">
+        <i class="fas fa-project-diagram"></i>
+        <span>Simulation (Saga)</span>
+        <i class="fas fa-chevron-down expand-icon" [class.rotated]="pipelineExplanationExpanded"></i>
+      </div>
+      <p>Generates rich, multi-stage traces simulating a distributed transaction across microservices.</p>
+      <div class="explanation-details" *ngIf="pipelineExplanationExpanded">
+        <h4>Pipeline Stages:</h4>
+        <ol>
+          <li><strong>Validation</strong> - Schema, permissions, quota, and rate-limit checks</li>
+          <li><strong>Data Fetch</strong> - Parallel SQL queries (3) and Redis operations (4)</li>
+          <li><strong>Processing</strong> - Transform &amp; enrich with retry logic (exponential backoff)</li>
+          <li><strong>Saga</strong> - Distributed transaction across microservices</li>
+          <li><strong>Finalization</strong> - Cleanup, audit logging, and metrics recording</li>
+        </ol>
+        <h4>Simulated Microservices:</h4>
+        <ul>
+          <li><strong>order-service</strong> - Handles order creation and management</li>
+          <li><strong>inventory-service</strong> - Manages stock levels and reservations</li>
+          <li><strong>payment-service</strong> - Processes payment transactions</li>
+          <li><strong>notification-service</strong> - Sends order confirmations and alerts</li>
+        </ul>
+        <h4>Service Attributes:</h4>
+        <p>Each saga span includes <code>service.name</code>, <code>service.version</code>, and <code>service.instance.id</code> for realistic distributed tracing.</p>
+      </div>
+    </div>
   </div>
 </div>

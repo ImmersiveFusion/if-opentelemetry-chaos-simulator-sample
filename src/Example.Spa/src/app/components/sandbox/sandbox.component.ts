@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, EventEmitter, OnInit } from '@angular/core';
 import { SandboxService } from '../../services/sandbox.service';
-import { FlowService, SqlScenario, RedisScenario } from '../../services/flow.service';
+import { FlowService, SqlScenario, RedisScenario, PipelineScenario } from '../../services/flow.service';
 import { catchError, first, forkJoin, merge, of, switchMap, tap } from 'rxjs';
 import { FailureService } from '../../services/failure.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -206,6 +206,30 @@ export class SandboxComponent implements OnInit {
         break;
       case 'redis':
         this.flowService.executeRedis(this.sandboxId!, scenario as RedisScenario)
+        .pipe(
+          tap(() => {
+            //nothing
+          }),
+          catchError(e => {
+            this.terminalLog(`[FAILURE]: ${resource} request failed to complete successfully: ${JSON.stringify(e)}`)
+            return of({failed: true});
+          }),
+          first())
+        .subscribe((response: any) => {
+          this.isRunning--;
+          this.newData++;
+
+          if (response.failed)
+          {
+            return;
+          }
+
+          this.terminalLog(`[SUCCESS]: ${resource} (${scenario}) completed successfully: ${JSON.stringify(response.value)}`)
+
+        });
+        break;
+      case 'pipeline':
+        this.flowService.executePipeline(this.sandboxId!, scenario as PipelineScenario)
         .pipe(
           tap(() => {
             //nothing
