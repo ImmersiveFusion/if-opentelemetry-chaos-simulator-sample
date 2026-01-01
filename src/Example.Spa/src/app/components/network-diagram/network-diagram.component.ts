@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output, OnChanges, ElementRef, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { networkDiagramAnimations } from './network-diagram.animations';
-import { SQL_SCENARIOS, REDIS_SCENARIOS, FlowScenario, SqlScenario, RedisScenario } from '../../services/flow.service';
+import { SQL_SCENARIOS, REDIS_SCENARIOS, PIPELINE_SCENARIOS, FlowScenario, SqlScenario, RedisScenario, PipelineScenario } from '../../services/flow.service';
 
 export interface FlowRequest {
   resource: string;
@@ -63,10 +63,18 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   // Scenario configuration
   sqlScenarios: FlowScenario[] = SQL_SCENARIOS;
   redisScenarios: FlowScenario[] = REDIS_SCENARIOS;
+  pipelineScenarios: FlowScenario[] = PIPELINE_SCENARIOS;
   selectedSqlScenario: SqlScenario = 'success';
   selectedRedisScenario: RedisScenario = 'success';
+  selectedPipelineScenario: PipelineScenario = 'simple-saga';
   sqlExpanded = false;
   redisExpanded = false;
+  pipelineExpanded = false;
+
+  // Explanation card expansion states
+  sqlExplanationExpanded = false;
+  redisExplanationExpanded = false;
+  pipelineExplanationExpanded = false;
 
   // Nodes
   nodes: NetworkNode[] = [
@@ -182,9 +190,22 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     if (!this.allowConcurrentRequests && (this.isAnimating || this.currentFlow)) return;
 
     this.isAnimating = true;
-    const scenario = resource === 'sql' ? this.selectedSqlScenario : this.selectedRedisScenario;
+    let scenario: string;
+    if (resource === 'sql') {
+      scenario = this.selectedSqlScenario;
+    } else if (resource === 'redis') {
+      scenario = this.selectedRedisScenario;
+    } else if (resource === 'pipeline') {
+      scenario = this.selectedPipelineScenario;
+    } else {
+      scenario = 'success';
+    }
     this.executeFlow.emit({ resource, scenario });
     this.startFlowAnimation(resource);
+  }
+
+  togglePipelineExpanded(): void {
+    this.pipelineExpanded = !this.pipelineExpanded;
   }
 
   toggleSqlExpanded(): void {
@@ -208,11 +229,24 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     return scenario?.label || 'Roundtrip';
   }
 
+  getSelectedPipelineScenario(): FlowScenario | undefined {
+    return this.pipelineScenarios.find(s => s.id === this.selectedPipelineScenario);
+  }
+
+  getSelectedPipelineScenarioLabel(): string {
+    return this.getSelectedPipelineScenario()?.label || 'Simple Saga';
+  }
+
+  getSelectedPipelineScenarioDescription(): string {
+    return this.getSelectedPipelineScenario()?.description || '';
+  }
+
   getClientNodeHeight(): number {
     const baseHeight = 100; // Header section
     const sqlHeight = this.sqlExpanded ? 140 : 65; // Expanded vs collapsed
     const redisHeight = this.redisExpanded ? 160 : 65; // Redis has more options
-    return baseHeight + sqlHeight + redisHeight;
+    const pipelineHeight = this.pipelineExpanded ? 100 : 65; // Pipeline section with 2 options when expanded
+    return baseHeight + sqlHeight + redisHeight + pipelineHeight;
   }
 
   private addStatusMessage(text: string, type: 'request' | 'telemetry' = 'request'): void {
@@ -250,6 +284,12 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   }
 
   private async startFlowAnimation(resource: string): Promise<void> {
+    // Handle pipeline specially - it's a multi-resource flow
+    if (resource === 'pipeline') {
+      await this.startPipelineFlowAnimation();
+      return;
+    }
+
     const targetConnection = this.connections.find(c => c.resource === resource);
     if (!targetConnection) return;
 
@@ -355,6 +395,159 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
       this.setNodeStatus('client', 'idle');
       this.requestDotVisible = false;
     }
+
+    this.currentFlow = null;
+    this.isAnimating = false;
+  }
+
+  private async startPipelineFlowAnimation(): Promise<void> {
+    // Reset step counters for new animation
+    this.resetStepCounters();
+
+    this.currentFlow = {
+      id: Date.now().toString(),
+      resource: 'pipeline',
+      status: 'traveling-to-api',
+      progress: 0
+    };
+
+    // Stage 1: Client sends request
+    this.setNodeStatus('client', 'processing');
+    this.addStatusMessage('Pipeline: Client initiating', 'request');
+    await this.delay(100);
+
+    // Travel to API
+    this.requestDotPosition = { fromNode: 'client', toNode: 'api', progress: 0 };
+    this.requestDotClass = '';
+    this.requestDotVisible = true;
+    this.cdr.detectChanges();
+    this.setNodeStatus('client', 'idle');
+    await this.animateDot('client', 'api', 300);
+
+    // Stage 2: API Validation
+    this.setNodeStatus('api', 'processing');
+    this.addStatusMessage('Pipeline: Validating request', 'request');
+    await this.delay(200);
+    this.addStatusMessage('Pipeline: Validation passed', 'request');
+
+    // Stage 3: Parallel data fetch - SQL
+    this.currentFlow!.status = 'traveling-to-target';
+    this.addStatusMessage('Pipeline: Fetching from SQL', 'request');
+
+    // Animate to SQL
+    await this.animateDot('api', 'sql', 300);
+    this.setNodeStatus('sql', 'processing');
+    await this.delay(150);
+    this.addStatusMessage('Pipeline: SQL query 1/3', 'request');
+    await this.delay(100);
+    this.addStatusMessage('Pipeline: SQL query 2/3', 'request');
+    await this.delay(100);
+    this.addStatusMessage('Pipeline: SQL query 3/3', 'request');
+    await this.delay(100);
+    this.setNodeStatus('sql', 'success');
+
+    // Fire SQL telemetry
+    this.animateSqlTelemetry();
+
+    // Return from SQL
+    this.requestDotClass = 'dot-success';
+    await this.animateDot('sql', 'api', 250);
+    this.setNodeStatus('sql', 'idle');
+
+    // Stage 4: Fetch from Redis
+    this.addStatusMessage('Pipeline: Fetching from Redis', 'request');
+    this.requestDotClass = '';
+    await this.animateDot('api', 'redis', 300);
+    this.setNodeStatus('redis', 'processing');
+    await this.delay(100);
+    this.addStatusMessage('Pipeline: Redis SET operation', 'request');
+    await this.delay(80);
+    this.addStatusMessage('Pipeline: Redis GET operation', 'request');
+    await this.delay(80);
+    this.addStatusMessage('Pipeline: Redis SET operation', 'request');
+    await this.delay(80);
+    this.addStatusMessage('Pipeline: Redis GET operation', 'request');
+    this.setNodeStatus('redis', 'success');
+
+    // Fire Redis telemetry
+    this.animateRedisTelemetry();
+
+    // Return from Redis
+    this.requestDotClass = 'dot-success';
+    await this.animateDot('redis', 'api', 250);
+    this.setNodeStatus('redis', 'idle');
+
+    // Stage 5: Processing with retries
+    this.setNodeStatus('api', 'processing');
+    this.addStatusMessage('Pipeline: Processing data', 'request');
+    await this.delay(200);
+    this.addStatusMessage('Pipeline: Transform & enrich', 'request');
+    await this.delay(150);
+
+    // Simulate potential retry (40% chance visual)
+    if (Math.random() < 0.4) {
+      this.addStatusMessage('Pipeline: Transient failure', 'request');
+      this.setNodeStatus('api', 'error');
+      await this.delay(200);
+      this.addStatusMessage('Pipeline: Retry with backoff', 'request');
+      await this.delay(300);
+      this.setNodeStatus('api', 'processing');
+      this.addStatusMessage('Pipeline: Retry succeeded', 'request');
+    }
+
+    // Stage 6: Distributed transaction simulation (Saga pattern)
+    // Service instances depend on selected scenario:
+    // - simple-saga: 4 services with 1 instance each
+    // - multi-replica-saga: 4 services with 2 instances each
+    if (this.selectedPipelineScenario === 'multi-replica-saga') {
+      // Multi-replica: 2 instances per service
+      this.addStatusMessage('Saga: order-service (order-001)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: order-service (order-002)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: inventory-service (inventory-001)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: inventory-service (inventory-002)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: payment-service (payment-001)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: payment-service (payment-002)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: notification-service (notification-001)', 'request');
+      await this.delay(75);
+      this.addStatusMessage('Saga: notification-service (notification-002)', 'request');
+      await this.delay(75);
+    } else {
+      // Simple saga: 1 instance per service
+      this.addStatusMessage('Saga: order-service (order-001)', 'request');
+      await this.delay(100);
+      this.addStatusMessage('Saga: inventory-service (inventory-001)', 'request');
+      await this.delay(100);
+      this.addStatusMessage('Saga: payment-service (payment-001)', 'request');
+      await this.delay(100);
+      this.addStatusMessage('Saga: notification-service (notification-001)', 'request');
+      await this.delay(100);
+    }
+
+    // Stage 7: Finalization
+    this.addStatusMessage('Pipeline: Finalizing', 'request');
+    await this.delay(100);
+
+    // Send main API telemetry
+    this.animateTelemetry('Pipeline');
+
+    // Return to client
+    this.currentFlow!.status = 'returning';
+    this.addStatusMessage('Pipeline: Returning response', 'request');
+    await this.animateDot('api', 'client', 300);
+    this.setNodeStatus('api', 'idle');
+    this.setNodeStatus('client', 'success');
+    this.addStatusMessage('Pipeline: Complete!', 'request');
+    await this.delay(300);
+
+    this.currentFlow!.status = 'success';
+    this.setNodeStatus('client', 'idle');
+    this.requestDotVisible = false;
 
     this.currentFlow = null;
     this.isAnimating = false;

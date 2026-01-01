@@ -9,6 +9,9 @@ export type SqlScenario = 'success' | 'wrong-table' | 'wrong-column' | 'syntax-e
 // Redis scenarios
 export type RedisScenario = 'success' | 'missing-key' | 'large-value' | 'expired-key' | 'serialization-error' | 'invalid-operation';
 
+// Pipeline scenarios (elaborate telemetry generation)
+export type PipelineScenario = 'simple-saga' | 'multi-replica-saga';
+
 export interface FlowScenario {
   id: string;
   label: string;
@@ -33,6 +36,16 @@ export const REDIS_SCENARIOS: FlowScenario[] = [
   { id: 'invalid-operation', label: 'Invalid Operation', description: 'Wrong data type operation', expectsError: true },
 ];
 
+// Pipeline Saga scenarios - simulates distributed microservices:
+// - order-service: Handles order creation and management
+// - inventory-service: Manages stock levels and reservations
+// - payment-service: Processes payment transactions
+// - notification-service: Sends order confirmations and alerts
+export const PIPELINE_SCENARIOS: FlowScenario[] = [
+  { id: 'simple-saga', label: 'Simple Saga', description: '4 microservices × 1 instance each = 4 spans', expectsError: false },
+  { id: 'multi-replica-saga', label: 'Multi-Replica Saga', description: '4 microservices × 2 replicas each = 8 spans', expectsError: false },
+];
+
 @Injectable({
   providedIn: 'root'
 })
@@ -50,6 +63,13 @@ export class FlowService {
   executeRedis(sandboxId: string, scenario: RedisScenario = 'success'): Observable<any> {
     return this.httpClient.post<any>(
       `${environment.apiUri}/flow/execute/redis?sandboxId=${sandboxId}&scenario=${scenario}`,
+      {}
+    );
+  }
+
+  executePipeline(sandboxId: string, scenario: PipelineScenario = 'simple-saga'): Observable<any> {
+    return this.httpClient.post<any>(
+      `${environment.apiUri}/flow/execute/pipeline?sandboxId=${sandboxId}&scenario=${scenario}`,
       {}
     );
   }
