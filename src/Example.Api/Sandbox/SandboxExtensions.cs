@@ -37,9 +37,19 @@ public static class SandboxExtensions
                 .AddRuntimeInstrumentation()
                 .AddProcessInstrumentation()
                 .AddOtlpExporter(ConfigureExporter))
-            .WithTracing(tracerProviderBuilder => tracerProviderBuilder
+            .WithTracing(tracerProviderBuilder =>
+            {
+                tracerProviderBuilder
                 .SetResourceBuilder(resourceBuilder)
-                .AddSource(SandboxSources.DefaultActivitySource.Name)
+                .AddSource(SandboxSources.DefaultActivitySource.Name);
+
+                // Register all saga service sources so their spans are exported
+                foreach (var sourceName in SandboxSources.SagaServiceSourceNames)
+                {
+                    tracerProviderBuilder.AddSource(sourceName);
+                }
+
+                tracerProviderBuilder
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()
                 .AddSqlClientInstrumentation(options =>
@@ -50,6 +60,7 @@ public static class SandboxExtensions
                 })
                 .AddRedisInstrumentation()
                 .AddOtlpExporter(ConfigureExporter)
-                .AddConsoleExporter());
+                .AddConsoleExporter();
+            });
     }
 }

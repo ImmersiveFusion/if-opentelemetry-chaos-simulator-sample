@@ -394,9 +394,23 @@ app.MapPost("/flow/execute/pipeline", async (HttpRequest request, ILogger<Progra
 
                 foreach (var (service, instanceId) in serviceInstances)
                 {
-                    using var serviceActivity = SandboxSources.DefaultActivitySource.StartActivity($"Saga.{service}", ActivityKind.Client);
+                    // Use service-specific ActivitySource for proper instrumentation scope
+                    var serviceSource = SandboxSources.GetServiceSource(service);
+                    using var serviceActivity = serviceSource.StartActivity($"Saga.Commit", ActivityKind.Client);
+
+                    // Build simulated service endpoint URL (e.g., order-001.order-service.svc.chaos.local)
+                    var serviceHost = $"{instanceId}.{service}.svc.chaos.local";
+
+                    // peer.service is the standard OTel attribute for identifying target services in client spans
+                    // This is what APMs use to build service topology/dependency maps
+                    serviceActivity?.SetTag("peer.service", serviceHost);
+                    serviceActivity?.SetTag("server.address", serviceHost);
+                    serviceActivity?.SetTag("server.port", 8080);
+                    serviceActivity?.SetTag("url.full", $"https://{serviceHost}:8080/saga/commit");
+
+                    // Additional service identification attributes
                     serviceActivity?.SetTag("service.name", service);
-                    serviceActivity?.SetTag("service.version", "1.0.0.0");
+                    serviceActivity?.SetTag("service.version", "1.0.0");
                     serviceActivity?.SetTag("service.instance.id", instanceId);
                     serviceActivity?.SetTag("saga.service", service);
                     serviceActivity?.SetTag("saga.operation", "commit");
