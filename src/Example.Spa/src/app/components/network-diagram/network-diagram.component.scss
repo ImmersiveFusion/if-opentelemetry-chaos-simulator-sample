@@ -173,8 +173,8 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   }
 
   &.telemetry {
-    background: rgba($color-telemetry, 0.15);
-    color: $color-telemetry;
+    background: rgba(#78909C, 0.15);
+    color: #90A4AE;
   }
 }
 
@@ -190,16 +190,16 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   animation: tickerFadeIn 0.2s ease-out;
 
   &.telemetry {
-    border-color: rgba($color-telemetry, 0.5);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba($color-telemetry, 0.15);
+    border-color: rgba(#78909C, 0.5);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 0 10px rgba(#78909C, 0.15);
 
     .ticker-step {
-      background: rgba($color-telemetry, 0.3);
-      color: $color-telemetry;
+      background: rgba(#78909C, 0.3);
+      color: #90A4AE;
     }
 
     .ticker-text {
-      color: rgba($color-telemetry, 0.9);
+      color: rgba(#B0BEC5, 0.9);
     }
   }
 
@@ -253,6 +253,31 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   }
 }
 
+// Developer Workstation border
+.developer-workstation-border {
+  fill: rgba(33, 150, 243, 0.08);
+  stroke: rgba(33, 150, 243, 0.4);
+  stroke-width: 2;
+  stroke-dasharray: none;
+  pointer-events: none;
+}
+
+.developer-workstation-label {
+  fill: rgba(33, 150, 243, 0.7);
+  font-size: 11px;
+  font-weight: 600;
+  text-anchor: middle;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+// "You" badge for Developer Workstation (red pill style)
+.developer-workstation-badge {
+  fill: url(#redPillGradient);
+  filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.5));
+}
+
 // Chaos Sandbox border
 .chaos-sandbox-border {
   fill: none;
@@ -272,9 +297,15 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   pointer-events: none;
 }
 
-// foreignObject nodes need pointer-events enabled
+// foreignObject nodes - disable pointer events on the container, enable on content
 foreignObject {
   overflow: visible;
+  pointer-events: none;
+
+  // Enable pointer events only on the actual node content
+  .node {
+    pointer-events: auto;
+  }
 
   // Bring hovered foreignObject to front for tooltips
   &:hover {
@@ -347,6 +378,32 @@ foreignObject {
     animation: telemetryDash 0.6s linear infinite;
   }
 
+  // OpenTelemetry outbound lines (orange to match OTel branding)
+  &.line-otel-out {
+    stroke: #F5A623;
+    stroke-width: 2;
+    stroke-dasharray: 5 5;
+    opacity: 0.7;
+    animation: telemetryDash 0.6s linear infinite;
+  }
+
+  &.line-iapm-client {
+    stroke: #F5A623;
+    stroke-width: 2;
+    stroke-dasharray: 5 5;
+    opacity: 0.7;
+    animation: telemetryDash 0.6s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.5));
+  }
+
+  &.line-others-client {
+    stroke: #607D8B;
+    stroke-width: 1;
+    stroke-dasharray: 3 3;
+    opacity: 0.4;
+    animation: telemetryDash 0.8s linear infinite;
+  }
+
   &.line-coming-soon {
     stroke: $color-message-broker;
     stroke-width: 2;
@@ -404,27 +461,24 @@ foreignObject {
   }
 }
 
-// Telemetry dot
+// Telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
 .telemetry-dot-svg {
-  fill: $color-telemetry;
-  filter: drop-shadow(0 0 8px $color-telemetry);
+  filter: drop-shadow(0 0 8px #425CC7);
 }
 
-// Others dot (gray hollow)
+// Others dot - fill set via inline attribute (#425CC7 blue for OTel branding)
 .others-dot-svg {
-  filter: drop-shadow(0 0 6px #9E9E9E);
+  filter: drop-shadow(0 0 6px #425CC7);
 }
 
-// SQL telemetry dot (green)
+// SQL telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
 .sql-telemetry-dot-svg {
-  fill: $color-healthy;
-  filter: drop-shadow(0 0 8px $color-healthy);
+  filter: drop-shadow(0 0 8px #425CC7);
 }
 
-// Redis telemetry dot (orange)
+// Redis telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
 .redis-telemetry-dot-svg {
-  fill: $color-warning;
-  filter: drop-shadow(0 0 8px $color-warning);
+  filter: drop-shadow(0 0 8px #425CC7);
 }
 
 // Explosion
@@ -503,23 +557,6 @@ foreignObject {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-request, 0.3);
   padding: 12px 12px;
   position: relative;
-
-  .node-badge {
-    position: absolute;
-    top: -10px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: $color-request;
-    color: white;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 3px 10px;
-    border-radius: 10px;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba($color-request, 0.5);
-  }
 }
 
 // Flow Section - embedded in client node
@@ -731,24 +768,206 @@ foreignObject {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(#9C27B0, 0.3);
 }
 
+// SQL Database - Azure SQL branding (blue)
 .node-database {
-  border-color: $color-healthy;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-healthy, 0.3);
+  border-color: #0078D4;
+  background: rgba(0, 120, 212, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 120, 212, 0.3);
+
+  .node-icon {
+    color: #0078D4;
+    text-shadow: 0 0 10px rgba(0, 120, 212, 0.5);
+  }
+
+  .node-label {
+    color: #fff;
+    font-weight: 600;
+  }
 }
 
+// Redis - Redis branding (red)
 .node-cache {
-  border-color: $color-warning;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-warning, 0.3);
+  border-color: #DC382D;
+  background: rgba(220, 56, 45, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(220, 56, 45, 0.3);
+
+  .node-icon {
+    color: #DC382D;
+    text-shadow: 0 0 10px rgba(220, 56, 45, 0.5);
+  }
+
+  .node-label {
+    color: #fff;
+    font-weight: 600;
+  }
 }
 
+// OpenTelemetry - OTel branding (orange/blue)
 .node-telemetry {
-  border-color: $color-telemetry;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba($color-telemetry, 0.3);
+  border-color: #F5A623;
+  border-width: 2px;
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(66, 92, 199, 0.15) 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 166, 35, 0.3);
+
+  .node-icon {
+    color: #F5A623;
+    text-shadow: 0 0 10px rgba(245, 166, 35, 0.5);
+  }
+
+  .node-label {
+    color: #fff;
+    font-weight: 600;
+  }
 }
 
 .node-others {
   border-color: #9E9E9E;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(#9E9E9E, 0.3);
+}
+
+// IAPM Cloud - Immersive APM branding (cyan/magenta gradient)
+.node-iapm-backend {
+  border-color: #00BCD4;
+  border-width: 2px;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.15) 0%, rgba(156, 39, 176, 0.15) 100%);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 25px rgba(0, 188, 212, 0.3),
+    0 0 40px rgba(156, 39, 176, 0.15);
+
+  .node-icon {
+    color: #00E5FF;
+    text-shadow: 0 0 15px rgba(0, 229, 255, 0.6);
+  }
+
+  .node-label {
+    color: #fff;
+    font-weight: 600;
+    text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+  }
+}
+
+.node-others-backend {
+  border-color: #78909C;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(#78909C, 0.2);
+}
+
+// IAPM Desktop - Modern, cool, vibrant
+.node-iapm-desktop {
+  border-color: #00BCD4;
+  border-width: 2px;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.2) 0%, rgba(156, 39, 176, 0.2) 100%);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(0, 188, 212, 0.4),
+    0 0 60px rgba(156, 39, 176, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  position: relative;
+  overflow: visible;
+
+  .node-icon {
+    color: #00E5FF;
+    font-size: 1.6rem;
+    text-shadow: 0 0 20px rgba(0, 229, 255, 0.8);
+  }
+
+  .node-label {
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(0, 229, 255, 0.6), 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+
+  .node-tagline {
+    font-size: 0.6rem;
+    color: rgba(0, 229, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .node-badge-modern {
+    position: absolute;
+    top: -8px;
+    right: 10px;
+    background: linear-gradient(90deg, #00BCD4, #9C27B0);
+    color: white;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 188, 212, 0.5);
+  }
+}
+
+// IAPM Web - Also modern but simpler
+.node-iapm-web {
+  border-color: #00BCD4;
+  border-width: 1px;
+  background: linear-gradient(135deg, rgba(0, 188, 212, 0.1) 0%, rgba(156, 39, 176, 0.1) 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(0, 188, 212, 0.2);
+  flex-direction: row;
+  gap: 8px;
+  padding: 8px 12px;
+  position: relative;
+  overflow: visible;
+
+  .node-icon {
+    color: #00BCD4;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .node-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #00E5FF;
+  }
+}
+
+// Browser badge for web-based APM tools (positioned like Immersive badge)
+.node-badge-browser {
+  position: absolute;
+  top: -8px;
+  right: 10px;
+  background: #607D8B;
+  color: white;
+  font-size: 0.5rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+// Other APM Tools - Legacy, boring, muted
+.node-others-legacy {
+  border-color: #607D8B;
+  border-width: 1px;
+  border-style: solid;
+  background: rgba(55, 71, 79, 0.6);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  flex-direction: row;
+  gap: 8px;
+  padding: 8px 12px;
+  position: relative;
+  overflow: visible;
+
+  .node-icon {
+    color: #90A4AE;
+    font-size: 1rem;
+    margin-bottom: 0;
+  }
+
+  .node-label {
+    color: #B0BEC5;
+    font-weight: 400;
+    font-size: 0.75rem;
+  }
 }
 
 .node-message-broker {
