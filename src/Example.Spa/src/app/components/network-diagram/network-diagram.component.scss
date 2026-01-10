@@ -6,9 +6,9 @@ $color-warning: #FF9800;
 $color-request: #2196F3;
 $color-photon: #00E5FF;
 $color-telemetry: #FF6D00;
-$color-message-broker: #E91E63;  // Pink for message broker
-$color-message-worker: #673AB7;  // Deep purple for worker
-$color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbox
+$color-message-broker: #E91E63;
+$color-message-worker: #673AB7;
+$color-chaos-sandbox: rgba(156, 39, 176, 0.3);
 
 .network-diagram-container {
   width: 100%;
@@ -132,7 +132,7 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   overflow: hidden;
 }
 
-// Status Ticker Container - horizontal stacking with separate rows
+// Status Ticker Container
 .status-ticker-container {
   position: absolute;
   top: 16px;
@@ -272,7 +272,7 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   pointer-events: none;
 }
 
-// "You" badge for Developer Workstation (red pill style)
+// "You" badge
 .developer-workstation-badge {
   fill: url(#redPillGradient);
   filter: drop-shadow(0 2px 4px rgba(244, 67, 54, 0.5));
@@ -297,17 +297,15 @@ $color-chaos-sandbox: rgba(156, 39, 176, 0.3);  // Faint purple for chaos sandbo
   pointer-events: none;
 }
 
-// foreignObject nodes - disable pointer events on the container, enable on content
+// foreignObject nodes
 foreignObject {
   overflow: visible;
   pointer-events: none;
 
-  // Enable pointer events only on the actual node content
   .node {
     pointer-events: auto;
   }
 
-  // Bring hovered foreignObject to front for tooltips
   &:hover {
     z-index: 100;
   }
@@ -378,30 +376,13 @@ foreignObject {
     animation: telemetryDash 0.6s linear infinite;
   }
 
-  // OpenTelemetry outbound lines (orange to match OTel branding)
+  // OTel outbound lines (orange)
   &.line-otel-out {
     stroke: #F5A623;
     stroke-width: 2;
     stroke-dasharray: 5 5;
     opacity: 0.7;
     animation: telemetryDash 0.6s linear infinite;
-  }
-
-  &.line-iapm-client {
-    stroke: #F5A623;
-    stroke-width: 2;
-    stroke-dasharray: 5 5;
-    opacity: 0.7;
-    animation: telemetryDash 0.6s linear infinite;
-    filter: drop-shadow(0 0 6px rgba(245, 166, 35, 0.5));
-  }
-
-  &.line-others-client {
-    stroke: #607D8B;
-    stroke-width: 1;
-    stroke-dasharray: 3 3;
-    opacity: 0.4;
-    animation: telemetryDash 0.8s linear infinite;
   }
 
   &.line-coming-soon {
@@ -461,22 +442,10 @@ foreignObject {
   }
 }
 
-// Telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
-.telemetry-dot-svg {
-  filter: drop-shadow(0 0 8px #425CC7);
-}
-
-// Others dot - fill set via inline attribute (#425CC7 blue for OTel branding)
-.others-dot-svg {
-  filter: drop-shadow(0 0 6px #425CC7);
-}
-
-// SQL telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
-.sql-telemetry-dot-svg {
-  filter: drop-shadow(0 0 8px #425CC7);
-}
-
-// Redis telemetry dot - fill set via inline attribute (#425CC7 blue for OTel branding)
+// Telemetry dots
+.telemetry-dot-svg,
+.others-dot-svg,
+.sql-telemetry-dot-svg,
 .redis-telemetry-dot-svg {
   filter: drop-shadow(0 0 8px #425CC7);
 }
@@ -559,7 +528,7 @@ foreignObject {
   position: relative;
 }
 
-// Flow Section - embedded in client node
+// Flow Section
 .flow-section {
   width: 100%;
   margin-top: 8px;
@@ -733,27 +702,18 @@ foreignObject {
     }
 
     &.sql {
-      background: linear-gradient(135deg, $color-healthy, darken($color-healthy, 15%));
-
-      &:hover:not(:disabled) {
-        box-shadow: 0 2px 8px rgba($color-healthy, 0.4);
-      }
+      background: linear-gradient(135deg, $color-healthy, #388E3C);
+      &:hover:not(:disabled) { box-shadow: 0 2px 8px rgba($color-healthy, 0.4); }
     }
 
     &.redis {
-      background: linear-gradient(135deg, $color-warning, darken($color-warning, 15%));
-
-      &:hover:not(:disabled) {
-        box-shadow: 0 2px 8px rgba($color-warning, 0.4);
-      }
+      background: linear-gradient(135deg, $color-warning, #E65100);
+      &:hover:not(:disabled) { box-shadow: 0 2px 8px rgba($color-warning, 0.4); }
     }
 
     &.pipeline {
-      background: linear-gradient(135deg, #9C27B0, darken(#9C27B0, 15%));
-
-      &:hover:not(:disabled) {
-        box-shadow: 0 2px 8px rgba(#9C27B0, 0.4);
-      }
+      background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+      &:hover:not(:disabled) { box-shadow: 0 2px 8px rgba(#9C27B0, 0.4); }
     }
 
     &:disabled {
@@ -768,7 +728,7 @@ foreignObject {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(#9C27B0, 0.3);
 }
 
-// SQL Database - Azure SQL branding (blue)
+// SQL Database
 .node-database {
   border-color: #0078D4;
   background: rgba(0, 120, 212, 0.15);
@@ -785,7 +745,7 @@ foreignObject {
   }
 }
 
-// Redis - Redis branding (red)
+// Redis
 .node-cache {
   border-color: #DC382D;
   background: rgba(220, 56, 45, 0.15);
@@ -802,7 +762,7 @@ foreignObject {
   }
 }
 
-// OpenTelemetry - OTel branding (orange/blue)
+// OpenTelemetry
 .node-telemetry {
   border-color: #F5A623;
   border-width: 2px;
@@ -820,12 +780,7 @@ foreignObject {
   }
 }
 
-.node-others {
-  border-color: #9E9E9E;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(#9E9E9E, 0.3);
-}
-
-// IAPM Cloud - Immersive APM branding (cyan/magenta gradient)
+// IAPM Cloud
 .node-iapm-backend {
   border-color: #00BCD4;
   border-width: 2px;
@@ -852,7 +807,7 @@ foreignObject {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 15px rgba(#78909C, 0.2);
 }
 
-// IAPM Desktop - Modern, cool, vibrant
+// IAPM Desktop
 .node-iapm-desktop {
   border-color: #00BCD4;
   border-width: 2px;
@@ -903,7 +858,7 @@ foreignObject {
   }
 }
 
-// IAPM Web - Also modern but simpler
+// IAPM Web
 .node-iapm-web {
   border-color: #00BCD4;
   border-width: 1px;
@@ -928,7 +883,7 @@ foreignObject {
   }
 }
 
-// Browser badge for web-based APM tools (positioned like Immersive badge)
+// Browser badge
 .node-badge-browser {
   position: absolute;
   top: -8px;
@@ -944,7 +899,7 @@ foreignObject {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-// Other APM Tools - Legacy, boring, muted
+// Other APM Tools
 .node-others-legacy {
   border-color: #607D8B;
   border-width: 1px;
@@ -1068,40 +1023,6 @@ foreignObject {
     }
   }
 }
-
-// Send buttons
-.btn-send {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: white;
-  letter-spacing: 0.5px;
-  width: 100%;
-
-  i {
-    font-size: 8px;
-  }
-
-  &:hover:not(:disabled) {
-    transform: scale(1.03);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-}
-
 
 // Status bar
 .status-bar {
@@ -1308,7 +1229,6 @@ foreignObject {
       }
     }
 
-    // Color coding for each type
     &:has(.fa-database) {
       i:first-child, span { color: $color-healthy; }
     }
