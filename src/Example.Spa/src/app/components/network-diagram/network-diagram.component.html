@@ -42,7 +42,7 @@
     </div>
 
     <!-- SVG for connection lines and animations -->
-    <svg class="connections-svg" viewBox="0 -30 800 700" preserveAspectRatio="xMidYMid meet">
+    <svg class="connections-svg" viewBox="0 -30 900 780" preserveAspectRatio="xMidYMid meet">
       <defs>
         <!-- Photon glow filter -->
         <filter id="photonGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -52,28 +52,39 @@
             <feMergeNode in="SourceGraphic"/>
           </feMerge>
         </filter>
+        <!-- Red pill gradient for "You" badge -->
+        <linearGradient id="redPillGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#E91E63"/>
+          <stop offset="100%" style="stop-color:#F44336"/>
+        </linearGradient>
       </defs>
 
+      <!-- Developer Workstation Border - left side container -->
+      <rect x="5" y="100" width="260" height="520" rx="16" ry="16" class="developer-workstation-border"/>
+      <text x="135" y="125" class="developer-workstation-label">Developer Workstation</text>
+      <!-- "You" red pill badge -->
+      <rect x="205" y="93" width="50" height="16" rx="8" ry="8" class="developer-workstation-badge"/>
+      <text x="230" y="104" fill="white" font-size="9" font-weight="700" text-anchor="middle" letter-spacing="0.5" style="text-transform: uppercase;">You</text>
+
       <!-- Chaos Sandbox Border - resizes when Coming Soon is enabled -->
-      <!-- Bottom stays at y=410, top expands upward when Coming Soon is enabled -->
-      <rect x="320"
+      <rect x="300"
             [attr.y]="showComingSoon ? 5 : 150"
-            width="480"
-            [attr.height]="showComingSoon ? 405 : 260"
+            width="590"
+            [attr.height]="showComingSoon ? 300 : 260"
             rx="20" ry="20"
             class="chaos-sandbox-border"/>
-      <text x="560" [attr.y]="showComingSoon ? 35 : 180" class="chaos-sandbox-label">Chaos Sandbox</text>
+      <text x="595" [attr.y]="showComingSoon ? 35 : 180" class="chaos-sandbox-label">Chaos Sandbox</text>
 
       <!-- Connection Lines -->
       <!-- Client to API (always healthy) -->
-      <line x1="80" y1="250" x2="400" y2="250"
+      <line x1="265" y1="300" x2="500" y2="300"
             class="connection-line line-healthy"/>
 
       <!-- API to SQL - invisible hit area + visible line -->
-      <line x1="400" y1="250" x2="720" y2="220"
+      <line x1="500" y1="300" x2="820" y2="270"
             class="connection-hit-area"
             (click)="onConnectionClick(getConnectionForResource('sql')!)"/>
-      <line x1="400" y1="250" x2="720" y2="220"
+      <line x1="500" y1="300" x2="820" y2="270"
             class="connection-line"
             [class.line-healthy]="getConnectionForResource('sql')?.status === 'healthy'"
             [class.line-broken]="getConnectionForResource('sql')?.status === 'broken'"
@@ -81,10 +92,10 @@
             (click)="onConnectionClick(getConnectionForResource('sql')!)"/>
 
       <!-- API to Redis - invisible hit area + visible line -->
-      <line x1="400" y1="250" x2="720" y2="350"
+      <line x1="500" y1="300" x2="820" y2="380"
             class="connection-hit-area"
             (click)="onConnectionClick(getConnectionForResource('redis')!)"/>
-      <line x1="400" y1="250" x2="720" y2="350"
+      <line x1="500" y1="300" x2="820" y2="380"
             class="connection-line"
             [class.line-healthy]="getConnectionForResource('redis')?.status === 'healthy'"
             [class.line-broken]="getConnectionForResource('redis')?.status === 'broken'"
@@ -92,54 +103,66 @@
             (click)="onConnectionClick(getConnectionForResource('redis')!)"/>
 
       <!-- Message Worker to Message Broker (Coming Soon) - horizontal bidirectional -->
-      <line *ngIf="showComingSoon" x1="460" y1="97" x2="645" y2="97"
+      <line *ngIf="showComingSoon" x1="560" y1="97" x2="745" y2="97"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="645" y1="103" x2="460" y2="103"
+      <line *ngIf="showComingSoon" x1="745" y1="103" x2="560" y2="103"
             class="connection-line line-coming-soon"/>
 
       <!-- Message Broker to API (Coming Soon) - diagonal bidirectional -->
-      <line *ngIf="showComingSoon" x1="720" y1="135" x2="430" y2="210"
+      <line *ngIf="showComingSoon" x1="820" y1="135" x2="530" y2="260"
             class="connection-line line-coming-soon"/>
-      <line *ngIf="showComingSoon" x1="420" y1="210" x2="710" y2="135"
+      <line *ngIf="showComingSoon" x1="520" y1="260" x2="810" y2="135"
             class="connection-line line-coming-soon"/>
 
       <!-- API to OpenTelemetry -->
-      <line x1="400" y1="300" x2="400" y2="440"
-            class="connection-line line-telemetry"/>
+      <line x1="500" y1="350" x2="500" y2="440"
+            class="connection-line line-otel-out"/>
 
       <!-- SQL to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 220 Q 620 400 400 470"
+            d="M 820 270 Q 700 400 570 450"
             class="connection-line line-telemetry-sql"/>
 
       <!-- Redis to OpenTelemetry (optional curved line) -->
       <path *ngIf="showOptionalCapabilities"
-            d="M 720 350 Q 600 450 400 470"
+            d="M 820 380 Q 680 420 570 460"
             class="connection-line line-telemetry-redis"/>
 
-      <!-- OpenTelemetry to Immersive APM -->
-      <line x1="400" y1="520" x2="280" y2="590"
-            class="connection-line line-telemetry"/>
+      <!-- OpenTelemetry to Immersive APM Backend (external cloud service) -->
+      <line x1="500" y1="530" x2="500" y2="545"
+            class="connection-line line-otel-out"/>
 
-      <!-- OpenTelemetry to Others -->
-      <line x1="400" y1="520" x2="520" y2="590"
-            class="connection-line line-others"/>
+      <!-- OpenTelemetry to Other APM Backends (external cloud service) -->
+      <line x1="570" y1="500" x2="620" y2="570"
+            class="connection-line line-otel-out"/>
+
+      <!-- Immersive APM Backend to IAPM Desktop (feeds dev workstation) -->
+      <line x1="430" y1="590" x2="255" y2="480"
+            class="connection-line line-otel-out"/>
+
+      <!-- Immersive APM Backend to IAPM Web (also available via web) -->
+      <line x1="430" y1="600" x2="255" y2="545"
+            class="connection-line line-otel-out"/>
+
+      <!-- Other APM Backends to Other APM Tools (feeds dev workstation) -->
+      <path d="M 620 650 Q 400 750 255 595"
+            class="connection-line line-otel-out" fill="none"/>
 
       <!-- Break indicators (clickable to fix) -->
-      <!-- SQL break indicator at midpoint of line from (400,250) to (720,220) = (560, 235) -->
+      <!-- SQL break indicator at midpoint of line from (500,300) to (820,270) = (660, 285) -->
       <g *ngIf="getConnectionForResource('sql')?.status === 'broken'"
          class="break-indicator-svg clickable"
          (click)="onConnectionClick(getConnectionForResource('sql')!)">
-        <circle cx="560" cy="235" r="14" fill="#f44336" class="break-pulse"/>
-        <text x="560" y="240" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
+        <circle cx="660" cy="285" r="14" fill="#f44336" class="break-pulse"/>
+        <text x="660" y="290" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
       </g>
 
-      <!-- Redis break indicator at midpoint of line from (400,250) to (720,350) = (560, 300) -->
+      <!-- Redis break indicator at midpoint of line from (500,300) to (820,380) = (660, 340) -->
       <g *ngIf="getConnectionForResource('redis')?.status === 'broken'"
          class="break-indicator-svg clickable"
          (click)="onConnectionClick(getConnectionForResource('redis')!)">
-        <circle cx="560" cy="300" r="14" fill="#f44336" class="break-pulse"/>
-        <text x="560" y="305" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
+        <circle cx="660" cy="340" r="14" fill="#f44336" class="break-pulse"/>
+        <text x="660" y="345" text-anchor="middle" fill="white" font-size="14" font-weight="bold">✕</text>
       </g>
 
       <!-- Request dot (photon) -->
@@ -154,55 +177,83 @@
                 filter="url(#photonGlow)"/>
       }
 
-      <!-- Telemetry dot -->
+      <!-- Telemetry dot (API to OTel - blue to match OTel branding) -->
       @if (telemetryDotVisible) {
         <circle [attr.cx]="getTelemetryDotSvgPosition().x"
                 [attr.cy]="getTelemetryDotSvgPosition().y"
                 r="6"
-                fill="#FF6D00"
+                fill="#425CC7"
                 class="telemetry-dot-svg"
                 filter="url(#photonGlow)"/>
       }
 
-      <!-- Immersive APM dot -->
+      <!-- Immersive APM dot (blue to match OTel branding) -->
       @if (immersiveApmDotVisible) {
         <circle [attr.cx]="getImmersiveApmDotSvgPosition().x"
                 [attr.cy]="getImmersiveApmDotSvgPosition().y"
                 r="6"
-                fill="#FF6D00"
+                fill="#425CC7"
                 class="telemetry-dot-svg"
                 filter="url(#photonGlow)"/>
       }
 
-      <!-- Others dot (gray hollow) -->
+      <!-- Others dot (blue to match OTel branding) -->
       @if (othersDotVisible) {
         <circle [attr.cx]="getOthersDotSvgPosition().x"
                 [attr.cy]="getOthersDotSvgPosition().y"
                 r="6"
-                fill="none"
-                stroke="#9E9E9E"
-                stroke-width="2"
+                fill="#425CC7"
                 class="others-dot-svg"
                 filter="url(#photonGlow)"/>
       }
 
-      <!-- SQL telemetry dot (optional - follows curved path) -->
+      <!-- SQL telemetry dot (optional - follows curved path, blue to match OTel) -->
       @if (sqlTelemetryDotVisible && showOptionalCapabilities) {
         <circle [attr.cx]="getSqlTelemetryDotSvgPosition().x"
                 [attr.cy]="getSqlTelemetryDotSvgPosition().y"
                 r="5"
-                fill="#4CAF50"
+                fill="#425CC7"
                 class="sql-telemetry-dot-svg"
                 filter="url(#photonGlow)"/>
       }
 
-      <!-- Redis telemetry dot (optional - follows curved path) -->
+      <!-- Redis telemetry dot (optional - follows curved path, blue to match OTel) -->
       @if (redisTelemetryDotVisible && showOptionalCapabilities) {
         <circle [attr.cx]="getRedisTelemetryDotSvgPosition().x"
                 [attr.cy]="getRedisTelemetryDotSvgPosition().y"
                 r="5"
-                fill="#FF9800"
+                fill="#425CC7"
                 class="redis-telemetry-dot-svg"
+                filter="url(#photonGlow)"/>
+      }
+
+      <!-- IAPM Desktop dot (from IAPM Cloud to Desktop) - blue to match OTel branding -->
+      @if (iapmDesktopDotVisible) {
+        <circle [attr.cx]="getIapmDesktopDotSvgPosition().x"
+                [attr.cy]="getIapmDesktopDotSvgPosition().y"
+                r="6"
+                fill="#425CC7"
+                class="iapm-desktop-dot-svg"
+                filter="url(#photonGlow)"/>
+      }
+
+      <!-- IAPM Web dot (from IAPM Cloud to Web) - blue to match OTel branding -->
+      @if (iapmWebDotVisible) {
+        <circle [attr.cx]="getIapmWebDotSvgPosition().x"
+                [attr.cy]="getIapmWebDotSvgPosition().y"
+                r="6"
+                fill="#425CC7"
+                class="iapm-web-dot-svg"
+                filter="url(#photonGlow)"/>
+      }
+
+      <!-- Others Client dot (from Other Plumbing to Other Tools) - blue to match OTel -->
+      @if (othersClientDotVisible) {
+        <circle [attr.cx]="getOthersClientDotSvgPosition().x"
+                [attr.cy]="getOthersClientDotSvgPosition().y"
+                r="6"
+                fill="#425CC7"
+                class="others-client-dot-svg"
                 filter="url(#photonGlow)"/>
       }
 
@@ -219,15 +270,14 @@
       </g>
 
       <!-- HTML Nodes inside SVG using foreignObject -->
-      <!-- Client Node with embedded flows -->
-      <foreignObject x="-5" y="140" [attr.height]="getClientNodeHeight()" width="250">
+      <!-- Client Node with embedded flows (inside Developer Workstation) -->
+      <foreignObject x="15" y="135" [attr.height]="getClientNodeHeight()" width="240">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-client"
              [class.status-processing]="getNode('client')?.status === 'processing'"
              [class.status-success]="getNode('client')?.status === 'success'"
              [class.status-error]="getNode('client')?.status === 'error'">
-          <span class="node-badge">You</span>
-          <span class="node-icon"><i class="fas fa-user"></i></span>
-          <span class="node-label">Client</span>
+          <span class="node-icon"><i class="fas fa-globe"></i></span>
+          <span class="node-label">Browser</span>
 
           <!-- SQL Flow Section -->
           <div class="flow-section sql-section">
@@ -302,8 +352,8 @@
         </div>
       </foreignObject>
 
-      <!-- API Node: Line ends at x=400, so center node there (x = 400 - width/2 = 400 - 60 = 340) -->
-      <foreignObject x="340" y="200" width="120" height="100">
+      <!-- API Node: Line ends at x=500, so center node there -->
+      <foreignObject x="440" y="250" width="120" height="100">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-api"
              [class.status-processing]="getNode('api')?.status === 'processing'"
              [class.status-success]="getNode('api')?.status === 'success'"
@@ -314,8 +364,8 @@
         </div>
       </foreignObject>
 
-      <!-- SQL Node: Line ends at x=720, so center node there (x = 720 - width/2 = 720 - 70 = 650) -->
-      <foreignObject x="650" y="170" width="140" height="100">
+      <!-- SQL Node: Line ends at x=820 -->
+      <foreignObject x="750" y="220" width="140" height="100">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-database"
              [class.status-processing]="getNode('sql')?.status === 'processing'"
              [class.status-success]="getNode('sql')?.status === 'success'"
@@ -326,8 +376,8 @@
         </div>
       </foreignObject>
 
-      <!-- Redis Node: Line ends at x=720, so center node there (x = 720 - width/2 = 720 - 70 = 650) -->
-      <foreignObject x="650" y="300" width="140" height="100">
+      <!-- Redis Node: Line ends at x=820 -->
+      <foreignObject x="750" y="330" width="140" height="100">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-cache"
              [class.status-processing]="getNode('redis')?.status === 'processing'"
              [class.status-success]="getNode('redis')?.status === 'success'"
@@ -338,8 +388,8 @@
         </div>
       </foreignObject>
 
-      <!-- Message Broker Node (Coming Soon): Line ends at x=720 -->
-      <foreignObject *ngIf="showComingSoon" x="645" y="60" width="150" height="75">
+      <!-- Message Broker Node (Coming Soon) -->
+      <foreignObject *ngIf="showComingSoon" x="745" y="60" width="150" height="75">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-broker coming-soon"
              title="Message Broker&#10;Asynchronous messaging system for decoupled communication. Enables pub/sub and queue-based patterns.">
           <span class="coming-soon-badge">Coming Soon</span>
@@ -348,8 +398,8 @@
         </div>
       </foreignObject>
 
-      <!-- Worker Node (Coming Soon): Line starts at x=400 -->
-      <foreignObject *ngIf="showComingSoon" x="340" y="60" width="120" height="75">
+      <!-- Worker Node (Coming Soon) -->
+      <foreignObject *ngIf="showComingSoon" x="440" y="60" width="120" height="75">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-message-worker coming-soon"
              title="Background Worker&#10;Processes async jobs from the message broker. Handles long-running tasks outside the request cycle.">
           <span class="coming-soon-badge">Coming Soon</span>
@@ -358,8 +408,8 @@
         </div>
       </foreignObject>
 
-      <!-- OpenTelemetry Node: Lines connect at x=400, y=380-420 range -->
-      <foreignObject x="330" y="430" width="140" height="90">
+      <!-- OpenTelemetry Node -->
+      <foreignObject x="430" y="440" width="140" height="90">
         <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
              [class.status-processing]="getNode('otel')?.status === 'processing'"
              [class.status-success]="getNode('otel')?.status === 'success'"
@@ -370,27 +420,57 @@
         </div>
       </foreignObject>
 
-      <!-- Immersive APM Node: Line ends at x=280 y=530 -->
-      <foreignObject x="205" y="550" width="150" height="90">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-telemetry"
+      <!-- Immersive APM Backend (external cloud service - NOT in sandbox) -->
+      <foreignObject x="430" y="545" width="140" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-iapm-backend"
              [class.status-processing]="getNode('immersive-apm')?.status === 'processing'"
              [class.status-success]="getNode('immersive-apm')?.status === 'success'"
              [class.status-error]="getNode('immersive-apm')?.status === 'error'"
-             title="Immersive APM&#10;3D visualization of your application's telemetry data for intuitive performance monitoring.">
-          <span class="node-icon"><i class="fas fa-cube"></i></span>
-          <span class="node-label">Immersive APM</span>
+             title="Immersive APM Cloud&#10;Cloud-native telemetry storage and processing with real-time 3D visualization engine.">
+          <span class="node-icon"><i class="fas fa-cloud"></i></span>
+          <span class="node-label">IAPM Cloud</span>
         </div>
       </foreignObject>
 
-      <!-- Others Node: Line ends at x=520 y=530 -->
-      <foreignObject x="460" y="550" width="120" height="90">
-        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-others"
+      <!-- Other APM Backends (external cloud services - NOT in sandbox) -->
+      <foreignObject x="620" y="570" width="140" height="90">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-others-backend"
              [class.status-processing]="getNode('others')?.status === 'processing'"
              [class.status-success]="getNode('others')?.status === 'success'"
              [class.status-error]="getNode('others')?.status === 'error'"
-             title="Other Backends&#10;OpenTelemetry can export to many backends: Jaeger, Zipkin, Prometheus, and more.">
-          <span class="node-icon"><i class="fas fa-ellipsis-h"></i></span>
-          <span class="node-label">Others</span>
+             title="Other APM Backends&#10;Traditional APM cloud services: Datadog, New Relic, Dynatrace, etc.">
+          <span class="node-icon"><i class="fas fa-question-circle"></i></span>
+          <span class="node-label">Other Plumbing</span>
+        </div>
+      </foreignObject>
+
+      <!-- IAPM Desktop (in Developer Workstation - modern/cool) -->
+      <foreignObject x="15" y="440" width="240" height="70">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-iapm-desktop"
+             title="Immersive APM Desktop&#10;Next-gen 3D visualization app for exploring distributed traces in immersive environments.">
+          <span class="node-badge-modern">Immersive :)</span>
+          <span class="node-icon"><i class="fas fa-cube"></i></span>
+          <span class="node-label">IAPM Desktop</span>
+        </div>
+      </foreignObject>
+
+      <!-- IAPM Web (in Developer Workstation - also modern) -->
+      <foreignObject x="15" y="520" width="240" height="45">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-iapm-web"
+             title="Immersive APM Web&#10;Browser-based 3D trace visualization.">
+          <span class="node-badge-browser">Browser</span>
+          <span class="node-icon"><i class="fas fa-globe"></i></span>
+          <span class="node-label">IAPM Web</span>
+        </div>
+      </foreignObject>
+
+      <!-- Other APM Tools (in Developer Workstation - legacy/boring) -->
+      <foreignObject x="15" y="570" width="240" height="45">
+        <div xmlns="http://www.w3.org/1999/xhtml" class="node node-others-legacy"
+             title="Traditional APM UIs&#10;Web dashboards, CLI tools, and basic 2D visualizations.">
+          <span class="node-badge-browser">Browser</span>
+          <span class="node-icon"><i class="fas fa-window-maximize"></i></span>
+          <span class="node-label">Other Tools</span>
         </div>
       </foreignObject>
     </svg>

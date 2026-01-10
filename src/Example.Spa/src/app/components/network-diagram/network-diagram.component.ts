@@ -32,17 +32,19 @@ export interface RequestFlow {
 }
 
 // SVG coordinate positions for each node (matches SVG line endpoints)
-// Based on viewBox="0 0 800 650" - aligned with HTML node positions
+// Based on viewBox="0 -30 900 700" - aligned with HTML node positions
 const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
-  'client': { x: 80, y: 250 },   // Left side (10%), middle
-  'api': { x: 400, y: 250 },     // Center (50%), same height as client
-  'sql': { x: 720, y: 220 },     // Right side (90%), above API
-  'redis': { x: 720, y: 350 },   // Right side (90%), below API
-  'message-broker': { x: 720, y: 100 },   // Right side (90%), top
-  'message-worker': { x: 400, y: 100 },   // Center (50%), top
-  'otel': { x: 400, y: 520 },    // Center (50%), below API - matches line endpoint
-  'immersive-apm': { x: 280, y: 590 },  // Left-center (35%), bottom
-  'others': { x: 520, y: 590 }          // Right-center (65%), bottom
+  'client': { x: 265, y: 300 },   // Developer workstation right edge
+  'api': { x: 500, y: 300 },      // Center of sandbox
+  'sql': { x: 820, y: 270 },      // Right side, above API
+  'redis': { x: 820, y: 380 },    // Right side, below API
+  'message-broker': { x: 820, y: 100 },   // Right side, top
+  'message-worker': { x: 500, y: 100 },   // Center, top
+  'otel': { x: 500, y: 570 },     // Center, below API
+  'immersive-apm': { x: 380, y: 510 },  // IAPM backend in sandbox
+  'immersive-apm-client': { x: 135, y: 490 },  // IAPM Desktop in dev workstation
+  'others': { x: 620, y: 510 },         // Others backend in sandbox
+  'others-client': { x: 135, y: 575 }   // Others client in dev workstation
 };
 
 @Component({
@@ -135,6 +137,14 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   sqlTelemetryDotProgress = 0;
   redisTelemetryDotVisible = false;
   redisTelemetryDotProgress = 0;
+
+  // Client dots (from APM backends to developer workstation)
+  iapmDesktopDotVisible = false;
+  iapmDesktopDotProgress = 0;
+  iapmWebDotVisible = false;
+  iapmWebDotProgress = 0;
+  othersClientDotVisible = false;
+  othersClientDotProgress = 0;
 
   // Status ticker - messages stack horizontally and linger
   statusMessages: { id: number; text: string; type: 'request' | 'telemetry'; step: number }[] = [];
@@ -602,6 +612,10 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     this.immersiveApmDotVisible = false;
     this.setNodeStatus('immersive-apm', 'idle');
     this.cdr.detectChanges();
+
+    // Continue to IAPM client tools (desktop and web in parallel)
+    this.animateToIapmClient('desktop');
+    this.animateToIapmClient('web');
   }
 
   private async animateToOthers(source: string = 'API'): Promise<void> {
@@ -624,6 +638,59 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     await this.delay(300);
     this.othersDotVisible = false;
     this.setNodeStatus('others', 'idle');
+    this.cdr.detectChanges();
+
+    // Continue to client tools
+    this.animateToOthersClient();
+  }
+
+  private async animateToIapmClient(target: 'desktop' | 'web' = 'desktop'): Promise<void> {
+    const steps = 25;
+    const stepDuration = 400 / steps;
+
+    if (target === 'desktop') {
+      this.iapmDesktopDotProgress = 0;
+      this.iapmDesktopDotVisible = true;
+      this.cdr.detectChanges();
+
+      for (let i = 0; i <= steps; i++) {
+        this.iapmDesktopDotProgress = i / steps;
+        this.cdr.detectChanges();
+        await this.delay(stepDuration);
+      }
+
+      this.iapmDesktopDotVisible = false;
+    } else {
+      this.iapmWebDotProgress = 0;
+      this.iapmWebDotVisible = true;
+      this.cdr.detectChanges();
+
+      for (let i = 0; i <= steps; i++) {
+        this.iapmWebDotProgress = i / steps;
+        this.cdr.detectChanges();
+        await this.delay(stepDuration);
+      }
+
+      this.iapmWebDotVisible = false;
+    }
+    this.cdr.detectChanges();
+  }
+
+  private async animateToOthersClient(): Promise<void> {
+    this.othersClientDotProgress = 0;
+    this.othersClientDotVisible = true;
+    this.cdr.detectChanges();
+
+    const steps = 30;
+    const stepDuration = 500 / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      this.othersClientDotProgress = i / steps;
+      this.cdr.detectChanges();
+      await this.delay(stepDuration);
+    }
+
+    this.othersClientDotVisible = false;
     this.cdr.detectChanges();
   }
 
@@ -686,11 +753,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for telemetry dot (follows line from API at y=300 to OTel at y=440)
+  // Get SVG position for telemetry dot (follows line from API to OTel)
   getTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="400" y1="300" x2="400" y2="440"
-    const from = { x: 400, y: 300 };
-    const to = { x: 400, y: 440 };
+    // Line: x1="500" y1="350" x2="500" y2="440"
+    const from = { x: 500, y: 350 };
+    const to = { x: 500, y: 440 };
 
     return {
       x: from.x + (to.x - from.x) * this.telemetryDotProgress,
@@ -698,11 +765,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Immersive APM dot (follows line from OTel at y=520 to IAPM at y=590)
+  // Get SVG position for Immersive APM dot (follows line from OTel to IAPM Cloud)
   getImmersiveApmDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="400" y1="520" x2="280" y2="590"
-    const from = { x: 400, y: 520 };
-    const to = { x: 280, y: 590 };
+    // Line: x1="500" y1="530" x2="500" y2="545"
+    const from = { x: 500, y: 530 };
+    const to = { x: 500, y: 545 };
 
     return {
       x: from.x + (to.x - from.x) * this.immersiveApmDotProgress,
@@ -710,16 +777,49 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Others dot (follows line from OTel at y=520 to Others at y=590)
+  // Get SVG position for Others dot (follows line from OTel to Other Plumbing)
   getOthersDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="400" y1="520" x2="520" y2="590"
-    const from = { x: 400, y: 520 };
-    const to = { x: 520, y: 590 };
+    // Line: x1="570" y1="500" x2="620" y2="570"
+    const from = { x: 570, y: 500 };
+    const to = { x: 620, y: 570 };
 
     return {
       x: from.x + (to.x - from.x) * this.othersDotProgress,
       y: from.y + (to.y - from.y) * this.othersDotProgress
     };
+  }
+
+  // Get SVG position for IAPM Desktop dot (follows line from IAPM Cloud to Desktop)
+  getIapmDesktopDotSvgPosition(): { x: number; y: number } {
+    // Desktop line: x1="430" y1="590" x2="255" y2="480"
+    const from = { x: 430, y: 590 };
+    const to = { x: 255, y: 480 };
+
+    return {
+      x: from.x + (to.x - from.x) * this.iapmDesktopDotProgress,
+      y: from.y + (to.y - from.y) * this.iapmDesktopDotProgress
+    };
+  }
+
+  // Get SVG position for IAPM Web dot (follows line from IAPM Cloud to Web)
+  getIapmWebDotSvgPosition(): { x: number; y: number } {
+    // Web line: x1="430" y1="600" x2="255" y2="545"
+    const from = { x: 430, y: 600 };
+    const to = { x: 255, y: 545 };
+
+    return {
+      x: from.x + (to.x - from.x) * this.iapmWebDotProgress,
+      y: from.y + (to.y - from.y) * this.iapmWebDotProgress
+    };
+  }
+
+  // Get SVG position for Others client dot (follows curved path from Other Plumbing to Other Tools)
+  getOthersClientDotSvgPosition(): { x: number; y: number } {
+    // Path: M 620 650 Q 400 750 255 595
+    const start = { x: 620, y: 650 };
+    const control = { x: 400, y: 750 };
+    const end = { x: 255, y: 595 };
+    return this.getQuadraticBezierPosition(start, control, end, this.othersClientDotProgress);
   }
 
   // Calculate position along a quadratic bezier curve
@@ -739,19 +839,19 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Get SVG position for SQL telemetry dot (along curved path)
   getSqlTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 220 Q 620 400 400 470 (matches HTML)
-    const start = { x: 720, y: 220 };
-    const control = { x: 620, y: 400 };
-    const end = { x: 400, y: 470 };
+    // Path: M 820 270 Q 700 400 570 450 (matches HTML)
+    const start = { x: 820, y: 270 };
+    const control = { x: 700, y: 400 };
+    const end = { x: 570, y: 450 };
     return this.getQuadraticBezierPosition(start, control, end, this.sqlTelemetryDotProgress);
   }
 
   // Get SVG position for Redis telemetry dot (along curved path)
   getRedisTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 720 350 Q 600 450 400 470 (matches HTML)
-    const start = { x: 720, y: 350 };
-    const control = { x: 600, y: 450 };
-    const end = { x: 400, y: 470 };
+    // Path: M 820 380 Q 680 420 570 460 (matches HTML)
+    const start = { x: 820, y: 380 };
+    const control = { x: 680, y: 420 };
+    const end = { x: 570, y: 460 };
     return this.getQuadraticBezierPosition(start, control, end, this.redisTelemetryDotProgress);
   }
 
