@@ -1,13 +1,13 @@
 # Project Structure
 
-```
+```text
 if-opentelemetry-chaos-simulator-sample/
 │
 ├── src/
 │   ├── Example.sln                    # Visual Studio solution file
 │   │
 │   ├── Example.Api/                   # ASP.NET Core backend
-│   │   ├── Program.cs                 # Entry point, minimal API endpoints
+│   │   ├── Program.cs                 # Entry point, minimal API endpoints, pipeline/saga
 │   │   ├── GlobalUsings.cs            # Global using directives
 │   │   ├── WeatherForecast.cs         # Demo data model (record type)
 │   │   ├── Example.Api.csproj         # Project file (NET 9.0)
@@ -25,7 +25,7 @@ if-opentelemetry-chaos-simulator-sample/
 │   │   │   ├── ISandboxCircuitBreaker.cs   # Circuit breaker interface
 │   │   │   ├── ActivityExtensions.cs  # OpenTelemetry Activity tagging
 │   │   │   ├── HttpRequestExtensions.cs    # Sandbox ID extraction
-│   │   │   └── SandboxSources.cs      # ActivitySource definition
+│   │   │   └── SandboxSources.cs      # ActivitySource definitions
 │   │   │
 │   │   └── wwwroot/                   # Static files (built SPA)
 │   │
@@ -33,8 +33,6 @@ if-opentelemetry-chaos-simulator-sample/
 │   │   ├── package.json               # npm dependencies
 │   │   ├── angular.json               # Angular CLI configuration
 │   │   ├── tsconfig.json              # TypeScript configuration
-│   │   ├── tsconfig.app.json          # App-specific TS config
-│   │   ├── tsconfig.spec.json         # Test TS config
 │   │   │
 │   │   ├── src/
 │   │   │   ├── main.ts                # Bootstrap file
@@ -44,15 +42,10 @@ if-opentelemetry-chaos-simulator-sample/
 │   │   │   ├── app/
 │   │   │   │   ├── app.module.ts      # Root module
 │   │   │   │   ├── app.component.ts   # Root component
-│   │   │   │   ├── app.component.html # Main template
-│   │   │   │   ├── app.component.scss # Component styles
-│   │   │   │   ├── app-routing.module.ts   # Routing configuration
 │   │   │   │   │
 │   │   │   │   ├── components/
-│   │   │   │   │   └── sandbox/       # Main UI component
-│   │   │   │   │       ├── sandbox.component.ts
-│   │   │   │   │       ├── sandbox.component.html
-│   │   │   │   │       └── sandbox.component.scss
+│   │   │   │   │   ├── sandbox/            # Main sandbox controller
+│   │   │   │   │   └── network-diagram/    # Interactive flow visualization
 │   │   │   │   │
 │   │   │   │   ├── services/
 │   │   │   │   │   ├── sandbox.service.ts   # Create sandbox
@@ -60,47 +53,47 @@ if-opentelemetry-chaos-simulator-sample/
 │   │   │   │   │   └── failure.service.ts   # Inject/eject failures
 │   │   │   │   │
 │   │   │   │   └── pipes/
-│   │   │   │       └── replace-line-breaks.pipe.ts
 │   │   │   │
 │   │   │   └── environments/
-│   │   │       ├── environment.ts           # Production config
-│   │   │       └── environment.development.ts
 │   │   │
-│   │   ├── dist/                      # Built output
-│   │   └── node_modules/              # Dependencies
+│   │   └── dist/                      # Built output
 │   │
-│   ├── Example.Worker/                # Placeholder project
-│   │   └── .gitkeep
-│   │
-│   └── .docs/                         # Documentation
-│       ├── knowledge/                 # Architecture documentation
-│       └── features/                  # Feature documentation
+│   └── Example.Worker/                # Placeholder (coming soon)
+│
+├── .context/                          # Project context documentation
+│   └── current/                       # Current architecture docs
+│
+├── .docs/
+│   └── features/                      # Feature documentation
 │
 ├── .github/
 │   └── workflows/                     # CI/CD workflows
 │
-├── .img/
-│   └── screenshot.png                 # README screenshot
-│
 ├── README.md                          # Project documentation
-├── LICENSE                            # MIT License
-└── .gitignore                         # Git ignore rules
+└── LICENSE                            # MIT License
 ```
 
 ## Key Directories
 
 ### Example.Api/Sandbox/
-Contains all the chaos simulation and sandboxing infrastructure:
-- Middleware for extracting sandbox context from requests
-- Circuit breaker implementation backed by distributed cache
-- OpenTelemetry configuration and extensions
-- Activity/span tagging utilities
 
-### Example.Spa/src/app/
-Contains the Angular application:
-- **components/sandbox**: Main UI with 3-step workflow
-- **services**: API communication layer
-- **pipes**: Utility pipes for display formatting
+Chaos simulation and sandboxing infrastructure:
 
-### Example.Api/wwwroot/
-Static files served by ASP.NET Core. The built Angular SPA is deployed here for production.
+- **SandboxMiddleware**: Extracts sandbox context, sets Baggage/Activity tags
+- **SandboxCircuitBreaker**: Circuit breaker backed by distributed cache
+- **SandboxSources**: ActivitySource definitions including service-specific sources for saga simulation
+- **SandboxExtensions**: OpenTelemetry configuration
+
+### Example.Spa/src/app/components/
+
+Angular application components:
+
+- **sandbox/**: Main controller component
+- **network-diagram/**: Interactive SVG-based visualization with animated request flow, scenario selectors, status ticker
+
+### Example.Spa/src/app/services/
+
+API communication layer:
+
+- **flow.service.ts**: Executes SQL, Redis, and Pipeline operations with scenario support
+- **failure.service.ts**: Injects/ejects circuit breaker failures
