@@ -14,10 +14,11 @@ public interface ISandboxCircuitBreaker
 ```
 
 **Implementation Details:**
+
 - Uses `IDistributedCache` for state storage
 - Cache key format: `{sandboxId}/{resource}`
-- Open circuit → uses invalid connection string → causes timeout
-- Closed circuit → uses valid connection string → normal operation
+- Open circuit: uses invalid connection string causing timeout
+- Closed circuit: uses valid connection string for normal operation
 
 ## 2. Sandbox Isolation Pattern
 
@@ -40,13 +41,90 @@ public class SandboxMiddleware
 ```
 
 **Benefits:**
+
 - Multi-user concurrent testing
 - No interference between experiments
 - Easy telemetry filtering by sandbox
 
-## 3. OpenTelemetry Three Pillars
+## 3. Scenario-Based Testing Pattern
+
+Operations support multiple predefined scenarios mapped to safe, hardcoded queries:
+
+```csharp
+var query = scenario.ToLowerInvariant() switch
+{
+    "wrong-table" => "SELECT NEWID() as ID FROM NonExistentTable_12345",
+    "wrong-column" => "SELECT NonExistentColumn_XYZ FROM sys.tables",
+    "syntax-error" => "SELECT * FROM @InvalidSyntax!!!",
+    "division-error" => "SELECT 1/0 as Result",
+    _ => "SELECT NEWID() as ID, GETUTCDATE() as [DateNowUtc]"
+};
+```
+
+**Benefits:**
+
+- No SQL injection risk (no user input in queries)
+- Reproducible error conditions
+- Clear error categorization in telemetry
+
+## 4. Service-Specific ActivitySource Pattern
+
+For saga simulation, each service gets its own ActivitySource:
+
+```csharp
+public static class SandboxSources
+{
+    public static readonly ActivitySource DefaultActivitySource =
+        new("Example.Api.Sandbox");
+
+    private static readonly ConcurrentDictionary<string, ActivitySource> ServiceSources = new();
+
+    public static ActivitySource GetServiceSource(string serviceName)
+    {
+        return ServiceSources.GetOrAdd(serviceName,
+            name => new ActivitySource($"Example.Api.Sandbox.{name}"));
+    }
+}
+```
+
+**Benefits:**
+
+- Proper service topology in APM tools
+- Realistic distributed tracing simulation
+- Standard OTel semantic conventions
+
+## 5. Pipeline/Saga Pattern
+
+Multi-stage pipeline with simulated distributed transactions:
+
+```csharp
+// Stage 4: Saga Pattern
+foreach (var (service, instanceId) in serviceInstances)
+{
+    var serviceSource = SandboxSources.GetServiceSource(service);
+    using var serviceActivity = serviceSource.StartActivity("Saga.Commit", ActivityKind.Client);
+
+    var serviceHost = $"{instanceId}.{service}.svc.chaos.local";
+    serviceActivity?.SetTag("peer.service", serviceHost);
+    serviceActivity?.SetTag("server.address", serviceHost);
+    serviceActivity?.SetTag("url.full", $"https://{serviceHost}:8080/saga/commit");
+
+    await Task.Delay(75, cancellationToken);
+    serviceActivity?.SetTag("saga.committed", true);
+}
+```
+
+**Simulated Services:**
+
+- `order-service` - Order management
+- `inventory-service` - Stock management
+- `payment-service` - Payment processing
+- `notification-service` - Notifications
+
+## 6. OpenTelemetry Three Pillars
 
 ### Traces
+
 ```csharp
 services.AddOpenTelemetry()
     .WithTracing(builder => builder
@@ -58,6 +136,7 @@ services.AddOpenTelemetry()
 ```
 
 ### Metrics
+
 ```csharp
 .WithMetrics(builder => builder
     .AddAspNetCoreInstrumentation()
@@ -68,6 +147,7 @@ services.AddOpenTelemetry()
 ```
 
 ### Logs
+
 ```csharp
 builder.Logging.AddOpenTelemetry(options =>
 {
@@ -75,101 +155,70 @@ builder.Logging.AddOpenTelemetry(options =>
 });
 ```
 
-## 4. Minimal APIs Pattern
+## 7. Minimal APIs Pattern
 
-Endpoints defined directly in Program.cs without controllers:
+Endpoints defined directly in Program.cs:
 
 ```csharp
 app.MapPost("/sandbox", () => Results.Ok(new { value = Guid.NewGuid() }));
 
-app.MapPost("/failure/{resource}/inject", async (
-    string resource,
-    ISandboxCircuitBreaker circuitBreaker,
-    HttpRequest request) =>
-{
-    var sandboxId = request.GetSandboxId();
-    await circuitBreaker.OpenAsync(resource, sandboxId);
-    return Results.Ok(new { value = true });
-});
-```
-
-## 5. Observable Failures Pattern
-
-Failures are designed to be captured by OpenTelemetry:
-
-```csharp
-try
-{
-    using var connection = new SqlConnection(connectionString);
-    await connection.OpenAsync();
-    // Execute query
-}
-catch (Exception ex)
-{
-    Activity.Current?.RecordException(ex);
-    logger.LogError(ex, "SQL operation failed");
-    return Results.Ok(new { success = false, message = ex.Message });
-}
-```
-
-## 6. RxJS Reactive Patterns (Frontend)
-
-```typescript
-// Parallel status checks on init
-forkJoin({
-  sql: this.failureService.status('sql', this.sandboxId),
-  redis: this.failureService.status('redis', this.sandboxId)
-}).subscribe(statuses => {
-  this.resources.sql = statuses.sql;
-  this.resources.redis = statuses.redis;
-});
-
-// Sequential operation with error handling
-this.flowService.executeSql(this.sandboxId).pipe(
-  tap(response => this.log(response)),
-  catchError(err => {
-    this.log({ success: false, message: err.message });
-    return EMPTY;
-  })
-).subscribe();
-```
-
-## 7. Configuration Externalization
-
-Connection strings vary by circuit state:
-
-```json
-{
-  "ConnectionStrings": {
-    "Sql": {
-      "Closed": "Server=valid-server;...",
-      "Open": "Server=invalid;Connect Timeout=1;..."
-    },
-    "Redis": {
-      "Closed": "valid-redis:6380,...",
-      "Open": "invalid:6380,connectTimeout=1000,..."
-    }
-  }
-}
-```
-
-## 8. Async-First Design
-
-All data operations are async with cancellation support:
-
-```csharp
 app.MapPost("/flow/execute/sql", async (
-    ISandboxCircuitBreaker circuitBreaker,
     HttpRequest request,
+    ISandboxCircuitBreaker circuitBreaker,
     IConfiguration config,
-    ILogger<Program> logger,
     CancellationToken cancellationToken) =>
 {
-    // Async operations throughout
+    var scenario = request.Query["scenario"].FirstOrDefault() ?? "success";
+    // Execute scenario...
 });
 ```
 
-## 9. Baggage Propagation
+## 8. Animated Flow Visualization Pattern
+
+Frontend uses SVG-based animations to visualize request flow:
+
+```typescript
+private async animateDot(fromNodeId: string, toNodeId: string, duration: number): Promise<void> {
+    const steps = 30;
+    const stepDuration = duration / steps;
+
+    for (let i = 0; i <= steps; i++) {
+        this.requestDotPosition = {
+            fromNode: fromNodeId,
+            toNode: toNodeId,
+            progress: i / steps
+        };
+        await this.delay(stepDuration);
+    }
+}
+```
+
+**Visual States:**
+
+- `idle` - No activity
+- `processing` - Pulsing animation
+- `success` - Green indicator
+- `error` - Red with explosion effect
+
+## 9. Status Ticker Pattern
+
+Real-time message queue for flow visibility:
+
+```typescript
+private addStatusMessage(text: string, type: 'request' | 'telemetry'): void {
+    const id = ++this.messageIdCounter;
+    const step = ++this.stepCounter;
+    this.statusMessages.push({ id, text, type, step });
+
+    // Sequential disappearance with stagger delay
+    const disappearTime = Math.max(now + baseDelay, this.lastDisappearTime + staggerDelay);
+    setTimeout(() => {
+        this.statusMessages = this.statusMessages.filter(m => m.id !== id);
+    }, delay);
+}
+```
+
+## 10. Baggage Propagation
 
 Context flows across service boundaries:
 
@@ -181,14 +230,29 @@ Baggage.SetBaggage("sandbox.id", sandboxId);
 var currentSandbox = Baggage.GetBaggage("sandbox.id");
 ```
 
-## 10. Static SPA Serving
+## 11. Exponential Backoff Retry Pattern
 
-Production deployment serves Angular from wwwroot:
+Pipeline processing includes retry simulation:
 
 ```csharp
-app.UseSpaStaticFiles();
-app.UseSpa(spa =>
+while (attempt < maxRetries)
 {
-    spa.Options.SourcePath = "wwwroot";
-});
+    attempt++;
+    using var attemptActivity = SandboxSources.DefaultActivitySource
+        .StartActivity($"Process.Attempt.{attempt}");
+
+    if (shouldSimulateFailure && attempt < maxRetries)
+    {
+        var backoffMs = (int)Math.Pow(2, attempt) * 100;
+        attemptActivity?.SetStatus(ActivityStatusCode.Error, "Transient failure");
+
+        using var backoffActivity = SandboxSources.DefaultActivitySource
+            .StartActivity("Retry.Backoff");
+        backoffActivity?.SetTag("backoff.ms", backoffMs);
+        backoffActivity?.SetTag("backoff.strategy", "exponential");
+        await Task.Delay(backoffMs, cancellationToken);
+        continue;
+    }
+    break;
+}
 ```
