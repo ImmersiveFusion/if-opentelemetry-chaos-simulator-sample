@@ -13,7 +13,7 @@ Try it now at **[demo.iapm.app](https://demo.iapm.app/)** - no setup required.
 3. Run SQL/Redis/Pipeline scenarios
 4. Watch animated request flows
 
-Want to see traces in 3D? Sign up for a free [Immersive APM](https://immersivefusion.com/landing/default) account.
+Want to see traces in 3D? Sign up for a free [Immersive APM](https://www.immersivefusion.com) account.
 
 ## What Is This?
 

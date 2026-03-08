@@ -314,7 +314,7 @@ svg.material-icons:not(:last-child) {
   color: white;
   font-weight: 600;
   width: auto;
-  min-width: 30%;
+  min-width: 180px;
   position: relative;
   @include neon-glow($color-secondary, 0.3);
 
