@@ -32,19 +32,19 @@ export interface RequestFlow {
 }
 
 // SVG coordinate positions for each node (matches SVG line endpoints)
-// Based on viewBox="0 -30 900 700" - aligned with HTML node positions
+// Based on viewBox="0 -30 920 700" - aligned with HTML node positions
 const NODE_POSITIONS: { [key: string]: { x: number; y: number } } = {
-  'client': { x: 265, y: 300 },   // Developer workstation right edge
-  'api': { x: 500, y: 300 },      // Center of sandbox
-  'sql': { x: 820, y: 270 },      // Right side, above API
-  'redis': { x: 820, y: 380 },    // Right side, below API
-  'message-broker': { x: 820, y: 100 },   // Right side, top
-  'message-worker': { x: 500, y: 100 },   // Center, top
-  'otel': { x: 500, y: 570 },     // Center, below API
-  'immersive-apm': { x: 380, y: 510 },  // IAPM backend in sandbox
-  'immersive-apm-client': { x: 135, y: 490 },  // IAPM Desktop in dev workstation
-  'others': { x: 620, y: 510 },         // Others backend in sandbox
-  'others-client': { x: 135, y: 575 }   // Others client in dev workstation
+  'client': { x: 495, y: 210 },   // Developer workstation right edge
+  'api': { x: 690, y: 210 },      // Center of sandbox
+  'sql': { x: 900, y: 180 },      // Right side, above API
+  'redis': { x: 900, y: 290 },    // Right side, below API
+  'message-broker': { x: 900, y: 10 },    // Right side, top
+  'message-worker': { x: 690, y: 10 },    // Center, top
+  'otel': { x: 690, y: 415 },     // Center, below API
+  'immersive-apm': { x: 610, y: 510 },  // IAPM Cloud (45° down-left from OTel)
+  'immersive-apm-client': { x: 385, y: 130 },  // IAPM Desktop in dev workstation
+  'others': { x: 770, y: 510 },         // Other Plumbing (45° down-right from OTel)
+  'others-client': { x: 385, y: 280 }   // Others client (y is dynamic, see getOtherToolsY)
 };
 
 @Component({
@@ -216,14 +216,26 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   togglePipelineExpanded(): void {
     this.pipelineExpanded = !this.pipelineExpanded;
+    if (this.pipelineExpanded) {
+      this.sqlExpanded = false;
+      this.redisExpanded = false;
+    }
   }
 
   toggleSqlExpanded(): void {
     this.sqlExpanded = !this.sqlExpanded;
+    if (this.sqlExpanded) {
+      this.redisExpanded = false;
+      this.pipelineExpanded = false;
+    }
   }
 
   toggleRedisExpanded(): void {
     this.redisExpanded = !this.redisExpanded;
+    if (this.redisExpanded) {
+      this.sqlExpanded = false;
+      this.pipelineExpanded = false;
+    }
   }
 
   getSelectedScenario(resource: string): FlowScenario | undefined {
@@ -252,11 +264,18 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
   }
 
   getClientNodeHeight(): number {
-    const baseHeight = 100; // Header section
-    const sqlHeight = this.sqlExpanded ? 140 : 65; // Expanded vs collapsed
-    const redisHeight = this.redisExpanded ? 160 : 65; // Redis has more options
-    const pipelineHeight = this.pipelineExpanded ? 100 : 65; // Pipeline section with 2 options when expanded
+    const baseHeight = 110; // Header section + padding
+    const sqlHeight = this.sqlExpanded ? 155 : 65; // Expanded vs collapsed
+    const redisHeight = this.redisExpanded ? 175 : 65; // Redis has more options
+    const pipelineHeight = this.pipelineExpanded ? 115 : 65; // Pipeline section with 2 options when expanded
     return baseHeight + sqlHeight + redisHeight + pipelineHeight;
+  }
+
+  getOtherToolsY(): number {
+    // Bottom-align Other Tools inside Developer Workstation
+    // Dev Workstation: starts at y=100, height = getClientNodeHeight() + 50
+    // Other Tools height = 70, 10px padding from bottom
+    return 45 + this.getClientNodeHeight() + 50 - 70 - 10;
   }
 
   private addStatusMessage(text: string, type: 'request' | 'telemetry' = 'request'): void {
@@ -755,9 +774,9 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
 
   // Get SVG position for telemetry dot (follows line from API to OTel)
   getTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="500" y1="350" x2="500" y2="440"
-    const from = { x: 500, y: 350 };
-    const to = { x: 500, y: 440 };
+    // Line: x1="690" y1="260" x2="690" y2="370"
+    const from = { x: 690, y: 260 };
+    const to = { x: 690, y: 370 };
 
     return {
       x: from.x + (to.x - from.x) * this.telemetryDotProgress,
@@ -765,11 +784,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Immersive APM dot (follows line from OTel to IAPM Cloud)
+  // Get SVG position for Immersive APM dot (OTel to IAPM Cloud, 45° down-left)
   getImmersiveApmDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="500" y1="530" x2="500" y2="545"
-    const from = { x: 500, y: 530 };
-    const to = { x: 500, y: 545 };
+    // Line: x1="660" y1="460" x2="610" y2="465"
+    const from = { x: 660, y: 460 };
+    const to = { x: 610, y: 465 };
 
     return {
       x: from.x + (to.x - from.x) * this.immersiveApmDotProgress,
@@ -777,11 +796,11 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for Others dot (follows line from OTel to Other Plumbing)
+  // Get SVG position for Others dot (OTel to Other Plumbing, 45° down-right)
   getOthersDotSvgPosition(): { x: number; y: number } {
-    // Line: x1="570" y1="500" x2="620" y2="570"
-    const from = { x: 570, y: 500 };
-    const to = { x: 620, y: 570 };
+    // Line: x1="720" y1="460" x2="770" y2="465"
+    const from = { x: 720, y: 460 };
+    const to = { x: 770, y: 465 };
 
     return {
       x: from.x + (to.x - from.x) * this.othersDotProgress,
@@ -789,37 +808,47 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
-  // Get SVG position for IAPM Desktop dot (follows line from IAPM Cloud to Desktop)
+  // Get SVG position for IAPM Desktop dot (cubic bezier, plugs horizontally into box)
   getIapmDesktopDotSvgPosition(): { x: number; y: number } {
-    // Desktop line: x1="430" y1="590" x2="255" y2="480"
-    const from = { x: 430, y: 590 };
-    const to = { x: 255, y: 480 };
-
-    return {
-      x: from.x + (to.x - from.x) * this.iapmDesktopDotProgress,
-      y: from.y + (to.y - from.y) * this.iapmDesktopDotProgress
-    };
+    const start = { x: 540, y: 490 };
+    const cp1 = { x: 520, y: 310 };
+    const cp2 = { x: 510, y: 130 };
+    const end = { x: 470, y: 130 };
+    return this.getCubicBezierPosition(start, cp1, cp2, end, this.iapmDesktopDotProgress);
   }
 
-  // Get SVG position for IAPM Web dot (follows line from IAPM Cloud to Web)
+  // Get SVG position for IAPM Web dot (cubic bezier, plugs horizontally into box)
   getIapmWebDotSvgPosition(): { x: number; y: number } {
-    // Web line: x1="430" y1="600" x2="255" y2="545"
-    const from = { x: 430, y: 600 };
-    const to = { x: 255, y: 545 };
-
-    return {
-      x: from.x + (to.x - from.x) * this.iapmWebDotProgress,
-      y: from.y + (to.y - from.y) * this.iapmWebDotProgress
-    };
+    const start = { x: 540, y: 505 };
+    const cp1 = { x: 520, y: 370 };
+    const cp2 = { x: 510, y: 230 };
+    const end = { x: 470, y: 230 };
+    return this.getCubicBezierPosition(start, cp1, cp2, end, this.iapmWebDotProgress);
   }
 
-  // Get SVG position for Others client dot (follows curved path from Other Plumbing to Other Tools)
+  // Get SVG position for Others client dot (smooth two-segment cubic: sweeps below IAPM Cloud then up)
   getOthersClientDotSvgPosition(): { x: number; y: number } {
-    // Path: M 620 650 Q 400 750 255 595
-    const start = { x: 620, y: 650 };
-    const control = { x: 400, y: 750 };
-    const end = { x: 255, y: 595 };
-    return this.getQuadraticBezierPosition(start, control, end, this.othersClientDotProgress);
+    const endY = this.getOtherToolsY();
+    const t = this.othersClientDotProgress;
+
+    if (t < 0.5) {
+      // Segment 1: bottom of Other Plumbing → sweep below IAPM Cloud
+      const segT = t / 0.5;
+      const start = { x: 770, y: 555 };
+      const cp1 = { x: 830, y: 570 };
+      const cp2 = { x: 630, y: 575 };
+      const end = { x: 500, y: 570 };
+      return this.getCubicBezierPosition(start, cp1, cp2, end, segT);
+    } else {
+      // Segment 2: smooth continuation up to Other Tools center (reflected control point from seg 1)
+      const segT = (t - 0.5) / 0.5;
+      const centerY = endY + 35; // Center of Other Tools box (height=70)
+      const start = { x: 500, y: 570 };
+      const cp1 = { x: 370, y: 565 };  // Reflected: (500*2-630, 570*2-575)
+      const cp2 = { x: 530, y: centerY };
+      const end = { x: 470, y: centerY };
+      return this.getCubicBezierPosition(start, cp1, cp2, end, segT);
+    }
   }
 
   // Calculate position along a quadratic bezier curve
@@ -837,21 +866,41 @@ export class NetworkDiagramComponent implements OnInit, OnChanges, AfterViewInit
     };
   }
 
+  // Calculate position along a cubic bezier curve
+  // P(t) = (1-t)³P0 + 3(1-t)²tP1 + 3(1-t)t²P2 + t³P3
+  private getCubicBezierPosition(
+    start: { x: number; y: number },
+    cp1: { x: number; y: number },
+    cp2: { x: number; y: number },
+    end: { x: number; y: number },
+    t: number
+  ): { x: number; y: number } {
+    const oneMinusT = 1 - t;
+    const oneMinusT2 = oneMinusT * oneMinusT;
+    const oneMinusT3 = oneMinusT2 * oneMinusT;
+    const t2 = t * t;
+    const t3 = t2 * t;
+    return {
+      x: oneMinusT3 * start.x + 3 * oneMinusT2 * t * cp1.x + 3 * oneMinusT * t2 * cp2.x + t3 * end.x,
+      y: oneMinusT3 * start.y + 3 * oneMinusT2 * t * cp1.y + 3 * oneMinusT * t2 * cp2.y + t3 * end.y
+    };
+  }
+
   // Get SVG position for SQL telemetry dot (along curved path)
   getSqlTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 820 270 Q 700 400 570 450 (matches HTML)
-    const start = { x: 820, y: 270 };
-    const control = { x: 700, y: 400 };
-    const end = { x: 570, y: 450 };
+    // Path: M 900 180 Q 800 330 730 380
+    const start = { x: 900, y: 180 };
+    const control = { x: 800, y: 330 };
+    const end = { x: 730, y: 380 };
     return this.getQuadraticBezierPosition(start, control, end, this.sqlTelemetryDotProgress);
   }
 
   // Get SVG position for Redis telemetry dot (along curved path)
   getRedisTelemetryDotSvgPosition(): { x: number; y: number } {
-    // Path: M 820 380 Q 680 420 570 460 (matches HTML)
-    const start = { x: 820, y: 380 };
-    const control = { x: 680, y: 420 };
-    const end = { x: 570, y: 460 };
+    // Path: M 900 290 Q 810 350 730 390
+    const start = { x: 900, y: 290 };
+    const control = { x: 810, y: 350 };
+    const end = { x: 730, y: 390 };
     return this.getQuadraticBezierPosition(start, control, end, this.redisTelemetryDotProgress);
   }
 
