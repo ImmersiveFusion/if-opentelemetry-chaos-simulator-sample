@@ -124,7 +124,7 @@ Edit `src/Example.Api/appsettings.json` with your connection strings and OTLP en
 }
 ```
 
-> To get an API key, sign up for a free [Immersive APM](https://immersivefusion.com/landing/default) account.
+> To get an API key, sign up for a free [Immersive APM](https://portal.iapm.app) account.
 
 ## Related Tools
 
@@ -147,7 +147,7 @@ Contributions welcome - [open an issue](https://github.com/ImmersiveFusion/if-op
 [Twitter/X](https://twitter.com/immersivefusion) |
 [YouTube](https://www.youtube.com/@immersivefusion)
 
-[Try Immersive APM](https://immersivefusion.com/landing/default) for your own projects.
+[Try Immersive APM](https://portal.iapm.app) for your own projects.
 
 ## License
 
