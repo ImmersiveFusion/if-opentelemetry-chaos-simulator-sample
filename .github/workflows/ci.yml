@@ -53,5 +53,15 @@ jobs:
       - name: Install
         run: npm ci
 
+      # The Mermaid XSS regression suite renders real diagrams, and Mermaid
+      # measures every node it lays out. jsdom has the SVG DOM but not SVG layout,
+      # so those renders throw there and the suite passes having asserted nothing.
+      # It runs in real Chromium instead. See vitest.config.ts.
+      - name: Install browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Test
+        run: npm test
+
       - name: Build
         run: npm run build
